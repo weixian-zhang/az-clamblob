@@ -1,9 +1,9 @@
 location: southeastasia 
-name: clamav
-resourceGroup: myresourcegroup 
+name: clamblob-clamav
+resourceGroup: rg-clamblob 
 type: Microsoft.App/containerApps 
 properties:
-  environmentId: "/subscriptions/<subscription_id>/resourceGroups/rg/providers/Microsoft.App/managedEnvironments/demokube"
+  environmentId: /subscriptions/c9061bc7-fa28-41d9-a783-2600b29c6e2f/resourceGroups/rg-clamblob/providers/Microsoft.App/managedEnvironments/cae-common
   configuration:
     replicaTimeout: 10
     replicaRetryLimit: 10
@@ -11,14 +11,40 @@ properties:
       replicaCompletionCount: 1
       parallelism: 4
     triggerType: Manual
+    initContainers: null
+    scale:
+      maxReplicas: 2
+      minReplicas: 1
+    ingress:
+      # additionalPortMappings:
+      # - exposedPort: 8000
+      #   external: false
+      #   targetPort: 8000
+      #   transport: tcp
+      allowInsecure: false 
+      external: false
+      targetPort: 3310
+      exposedPort: 3310
+      transport: Tcp
   template:
     containers:
     - image: clamav/clamav
-      name: clamav
+      name: clamblob-clamav
+      resources: 
+        cpu: 1.0
+        memory: 2.0Gi 
       volumeMounts:
       - mountPath: "/mnt"
-        volumeName: azure-files-volume
+        volumeName: clamblob-scan
+    environmentVariables:
+    - name: MAX_FILE_SIZE
+      value: "40000M"
+    - name: MAX_SCAN_SIZE
+      value: "40000M"
+    - name: MAX_FILES
+      value: "50000"
     volumes:
-    - name: azure-files-volume
+    - name: clamblob-scan
       storageType: AzureFile
-      storageName: myazurefiles
+      storageName: clamblob-scan
+    

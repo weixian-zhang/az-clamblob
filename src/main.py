@@ -7,6 +7,8 @@ config = Config()
 
 def scan():
 
+    Log.info(f'clamav host:port - {config.clamav_host}:{config.clamav_port}')
+
     cvm = ClamAVManager(config)
 
     result1 = cvm.scan_file("/mnt/eicar_com.zip")
@@ -21,7 +23,7 @@ def scan():
 try:
     while True:
         scan()
-        time.sleep(10)
+        time.sleep(3)
 except Exception as e:
     Log.error(f"An error occurred: {str(e)}")
 except KeyboardInterrupt:
