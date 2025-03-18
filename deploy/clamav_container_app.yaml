@@ -1,0 +1,24 @@
+location: southeastasia 
+name: clamav
+resourceGroup: myresourcegroup 
+type: Microsoft.App/containerApps 
+properties:
+  environmentId: "/subscriptions/<subscription_id>/resourceGroups/rg/providers/Microsoft.App/managedEnvironments/demokube"
+  configuration:
+    replicaTimeout: 10
+    replicaRetryLimit: 10
+    manualTriggerConfig:
+      replicaCompletionCount: 1
+      parallelism: 4
+    triggerType: Manual
+  template:
+    containers:
+    - image: clamav/clamav
+      name: clamav
+      volumeMounts:
+      - mountPath: "/mnt"
+        volumeName: azure-files-volume
+    volumes:
+    - name: azure-files-volume
+      storageType: AzureFile
+      storageName: myazurefiles

@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "run clamav",
+            "type": "shell",
+            "command": "docker run -e MAX_FILE_SIZE=40000M -e MAX_SCAN_SIZE=40000M -e MAX_FILES=50000 -v C:\\Weixian\\projects\\VBD\\NEA\\az-clamblob\\mount:/mnt -p 3310:3310 clamav/clamav"
+        },
+
+        {
+            "label": "docker build scanner",
+            "type": "shell",
+            "command": "docker build -t docker.io/wxzd/clamblob:v0.1.0 .",
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            },
+            "dependsOn": [
+                "pip freeze"
+            ]
+        },
+        {
+            "label": "pip freeze",
+            "type": "shell",
+            "command": "pip freeze > requirements.txt",
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            },
+        },
+        {
+            "label": "docker push scanner",
+            "type": "shell",
+            "command": "docker push docker.io/wxzd/clamblob:v0.1.0",
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            },
+            "dependsOn": [
+                "docker build scanner"
+            ]
+            
+        }
+    ]
+}
