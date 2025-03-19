@@ -1,0 +1,53 @@
+<mxfile host="Electron" modified="2025-03-17T08:45:12.404Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.2 Chrome/114.0.5735.289 Electron/25.9.4 Safari/537.36" etag="UqrQlEHzA4iZjRqbhtj1" version="22.1.2" type="device">
+  <diagram name="Page-1" id="ndJyLyUubDz_A-SszbJo">
+    <mxGraphModel dx="1018" dy="759" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.173;exitY=1.085;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="H1iAT5d7S2yg9uU28LIO-2" target="H1iAT5d7S2yg9uU28LIO-4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="299" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-2" value="scanner" style="image;sketch=0;aspect=fixed;html=1;points=[];align=right;fontSize=12;image=img/lib/mscae/Docker.svg;labelPosition=left;verticalLabelPosition=middle;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="290" y="295.5" width="50" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-3" value="clamav" style="image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/Docker.svg;labelPosition=center;verticalLabelPosition=top;verticalAlign=bottom;" vertex="1" parent="1">
+          <mxGeometry x="460" y="290" width="50" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-4" value="azure fileshare&lt;br&gt;volume" style="shadow=0;dashed=0;html=1;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.veeam.3d.datastore_volume;" vertex="1" parent="1">
+          <mxGeometry x="380" y="381" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-6" value="retry mechaism to check if clamav is ready" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="30" y="550" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-7" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.472;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.987;exitY=0.407;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="H1iAT5d7S2yg9uU28LIO-2" target="H1iAT5d7S2yg9uU28LIO-3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="260" as="sourcePoint" />
+            <mxPoint x="280" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.413;exitY=1.024;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="H1iAT5d7S2yg9uU28LIO-3" target="H1iAT5d7S2yg9uU28LIO-4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="309" y="350" as="sourcePoint" />
+            <mxPoint x="390" y="400" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="481" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-11" value="for each blob:&lt;br&gt;&amp;nbsp; if not clamblob:&amp;nbsp;&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;- set blob metadata &quot;scan-in-progress&quot;&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;- download blob&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;- upload fileshare&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;- trigger scan&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;- get result&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;- quarentine file if virus found&lt;br&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;- update blob metadata: &quot;clean&quot;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="30" y="220" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-12" value="Azure Blob Storage" style="verticalLabelPosition=top;html=1;verticalAlign=bottom;align=center;strokeColor=none;fillColor=#00BEF2;shape=mxgraph.azure.storage_blob;labelPosition=center;" vertex="1" parent="1">
+          <mxGeometry x="295" y="120" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="H1iAT5d7S2yg9uU28LIO-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="H1iAT5d7S2yg9uU28LIO-2" target="H1iAT5d7S2yg9uU28LIO-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
