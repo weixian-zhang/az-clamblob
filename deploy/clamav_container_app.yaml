@@ -34,8 +34,13 @@ properties:
         cpu: 1.0
         memory: 2.0Gi 
       volumeMounts:
-      - mountPath: "/mnt"
+      - mountPath: "azfile"
+        # subPath: "scan-staging"
         volumeName: clamblob-scan
+    volumes:
+    - name: clamblob-scan
+      storageType: AzureFile
+      storageName: clamblob-scan
     environmentVariables:
     - name: MAX_FILE_SIZE
       value: "40000M"
@@ -43,8 +48,5 @@ properties:
       value: "40000M"
     - name: MAX_FILES
       value: "50000"
-    volumes:
-    - name: clamblob-scan
-      storageType: AzureFile
-      storageName: clamblob-scan
+    
     
