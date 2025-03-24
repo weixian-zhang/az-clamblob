@@ -21,6 +21,7 @@ class Config:
         self.azure_storage_name = ''
         self.azure_file_share_conn_string = ''
         self.azure_file_share_name = 'clamblob-scan'
+        self.storage_account_key = ''
         self.load()
 
     def load(self):
@@ -32,6 +33,7 @@ class Config:
         self.azure_storage_name = os.getenv('AZURE_STORAGE_NAME') if os.getenv('AZURE_STORAGE_NAME') else ''
         self.azure_file_share_conn_string = os.getenv('AZURE_FILE_SHARE_CONN_STRING') if os.getenv('AZURE_FILE_SHARE_CONN_STRING') else ''
         self.azure_file_share_name = os.getenv('AZURE_FILE_SHARE_NAME') if os.getenv('AZURE_FILE_SHARE_NAME') else 'clamblob-scan'
+        self.storage_account_key = os.getenv('AZURE_STORAGE_KEY') if os.getenv('AZURE_STORAGE_KEY') else ''
 
         if self.azure_storage_name == '':
             raise ValueError("AZURE_STORAGE_NAME is not set in the environment variables.")
