@@ -1,4 +1,4 @@
-from clamav import ClamAVManager
+from scan import BlobScanner
 import time
 import log as Log
 from config import Config
@@ -7,21 +7,30 @@ config = Config()
 
 def scan():
 
-    Log.info(f'clamav host:port - {config.clamav_host}:{config.clamav_port}')
+    try:
 
-    cvm = ClamAVManager(config)
+        Log.info(f'clamav host:port - {config.clamav_host}:{config.clamav_port}')
 
-    result1 = cvm.scan_file("/azfile/eicar_com.zip")
+        scanner = BlobScanner(config)
+        
+        scanner.scan()
 
-    result2 = cvm.scan_file("/azfile/testfile.org-5GB.dat")
+    except Exception as e:
+        Log.error(f"Main - an error occurred: {str(e)}")
+    
+    # cvm = ClamAVManager(config)
 
-    result3 = cvm.scan_file("/azfile/10GB.bin")
+    # result1 = cvm.scan_file("/azfile/eicar_com.zip")
 
-    Log.info(f'{result1.file_path} - {result1.status} - {result1.message}')
+    # result2 = cvm.scan_file("/azfile/testfile.org-5GB.dat")
 
-    Log.info(f'{result2.file_path} - {result2.status} - {result2.message}')
+    # result3 = cvm.scan_file("/azfile/10GB.bin")
 
-    Log.info(f'{result3.file_path} - {result3.status} - {result3.message}')
+    # Log.info(f'{result1.file_path} - {result1.status} - {result1.message}')
+
+    # Log.info(f'{result2.file_path} - {result2.status} - {result2.message}')
+
+    # Log.info(f'{result3.file_path} - {result3.status} - {result3.message}')
 
 
 try:
