@@ -1,5 +1,5 @@
 from azstorage import AzStorage
-import sys
+from pathlib import Path  
 import log as Log
 from clamav import ClamAVManager, ScanStatus
 
@@ -30,7 +30,7 @@ class BlobScanner:
         try:
 
             containers = self.blob_service_client.list_containers(include_metadata=True)
-
+            
             for container in containers:
 
                 container_client = self.blob_service_client.get_container_client(container=container.name)
@@ -39,46 +39,37 @@ class BlobScanner:
 
                 for blob in blobs:
 
-                    self.set_blob_scan_status("in_progress", container.name, blob.name)
-
-                   
+                    # self.set_blob_scan_status("in_progress", container.name, blob.name)
 
                     
-                    # download from blob
-                    blob_ok, blob_bytes = self.azstorage.copy_blob_to_file_share(self.blob_service_client.url, container.name, blob.name)
-
-                    if not blob_ok:
-                        self.set_blob_scan_status("error", container.name, blob.name)
-                        Log.error(f"Error downloading blob {blob.name} from container {container.name}")
-                        continue
+                    # # download from blob
+                    # blob_ok = self.azstorage.copy_blob_to_file_share(self.blob_service_client.url, container.name, blob.name)
 
 
-                    # upload to file share
-                    uploadfs_ok = self.azstorage.upload_stream_to_file_share(blob_bytes, blob.name, self.config.azure_file_share_name)
-                    
+                    # if not blob_ok:
+                    #     self.set_blob_scan_status("error", container.name, blob.name)
+                    #     Log.error(f"Error downloading blob {blob.name} from container {container.name}")
+                    #     continue
 
-                    if not uploadfs_ok:
-                        Log.error(f"Error uploading blob {blob.name} to file share {self.config.azure_file_share_name}")
-                        continue
 
-                    
-                    Log.info(f"Scanning file {file_path} using clamav")
+                    blob_name_without_dir = Path(blob.name).name
                         
                     #scan file on file share using clamav
-                    file_path = self.config.mount_path + "/" + blob.name
+                    file_path = self.config.mount_path + "/" + blob_name_without_dir
 
                     scanresult = self.clamav.scan_file(file_path)
 
                     if scanresult.status == ScanStatus.FOUND:
-                        self.move_blob_to_quarantine(blob_bytes, container.name, blob.name)
+                        self.azstorage.move_blob_to_quarantine(container.name, blob.name)
                         self.set_blob_scan_status("virus_found", self.config.quarantine_container_name, blob.name)
                         Log.info(f"Virus found in file {file_path}. Moved to quarantine container {self.config.quarantine_container_name}")
                     elif scanresult.status == ScanStatus.OK:
                         self.set_blob_scan_status("no_virus", container.name, blob.name)
-                        continue
                     elif scanresult.status == ScanStatus.ERROR:
                         self.set_blob_scan_status("error", container.name, blob.name)
-                        Log.error(f"Error scanning file {container.name}/{file_path} using clamav")
+                        Log.error(f"Scan - error scanning file {container.name}/{file_path}. {scanresult.message}")
+
+                    
         
 
         except Exception as e:
