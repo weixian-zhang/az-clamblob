@@ -4,7 +4,7 @@
         {
             "label": "run clamav",
             "type": "shell",
-            "command": "docker run -e MAX_FILE_SIZE=40000M -e MAX_SCAN_SIZE=40000M -e MAX_FILES=50000 -v Z:\\:/azfile -p 3310:3310 clamav/clamav"
+            "command": "docker run -e MAX_FILE_SIZE=40000M -e MAX_SCAN_SIZE=40000M -e MAX_FILES=50000 -v azfile:/azfile:rw -p 3310:3310 clamav/clamav"
         },
 
         {

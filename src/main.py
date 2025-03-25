@@ -2,14 +2,14 @@ from scan import BlobScanner
 import time
 import log as Log
 from config import Config
+from clamav import ClamAVManager
 
 config = Config()
+clamav = ClamAVManager(config)
 
 def scan():
 
     try:
-
-        Log.info(f'clamav host:port - {config.clamav_host}:{config.clamav_port}')
 
         scanner = BlobScanner(config)
         
@@ -35,6 +35,13 @@ def scan():
 
 try:
     while True:
+        
+        ok, _ = clamav.ping()
+        if not ok:
+            Log.error(f"ClamAV server '{config.clamav_host}:{config.clamav_port}' is not ready or not reachable.")
+            time.sleep(5)
+            continue
+
         scan()
         time.sleep(3)
 except Exception as e:
