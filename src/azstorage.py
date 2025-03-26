@@ -20,30 +20,6 @@ class AzStorage:
     def get_blob_client(self):
         return self.blob_service_client
     
-    # def upload_stream_to_file_share(self, data: bytes, file_path, container_name):
-        
-    #     try:
-    #         sfc = ShareFileClient.from_connection_string(
-    #             conn_str=self.config.azure_file_share_conn_string, share_name=self.config.azure_file_share_name, file_path=file_path)
-        
-    #         sfc.upload_file(data)
-    #     except Exception as e:
-    #         return False, None
-        
-    # def download_stream_from_file_share(self, file_path) -> list[bool, bytes]:
-        
-    #     try:
-    #         sfc = ShareFileClient.from_connection_string(
-    #         conn_str=self.config.azure_file_share_conn_string, share_name=self.config.azure_file_share_name, file_path=file_path)
-        
-    #         data = sfc.download_file()
-    #         stream = io.BytesIO()
-    #         data.readinto(stream)
-
-    #         return True, stream.read()
-
-    #     except Exception as e:
-    #         return False, None
         
     def upload_stream_to_blob(self, data: bytes, container_name, blob_name) -> bool:
         try:
@@ -133,16 +109,6 @@ class AzStorage:
         except Exception as e:
             return False
         
-
-    # def download_blob_to_stream(self, container_name, blob_name) -> list[bool, bytes]:
-
-    #     try:
-    #         blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-    #         stream = io.BytesIO()
-    #         blob_client.download_blob().readinto(stream)
-    #         return True, stream.read()
-    #     except Exception as e:
-    #         return False, None
         
     
     def delete_blob(self, container_name, blob_name) -> bool:
