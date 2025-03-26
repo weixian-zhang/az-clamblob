@@ -42,7 +42,7 @@ class ClamAVManager:
 
             pingok, _ = self.ping()
             if not pingok:
-                Log.error(f"ClamAV server '{self.clamav.host}:{self.clamav.port}' is not reachable")
+                Log.error(f"ClamAV server '{self.clamav.host}:{self.clamav.port}' is not reachable", 'ClamAVManager')
                 return ScanResult(file_path, ScanStatus.ConnectionError, "ClamAV server is not reachable")
 
             sr = ScanResult(file_path)

@@ -55,6 +55,7 @@ class BlobScanner:
                        
                     #scan file on file share using clamav
                     blob_name_without_dir = Path(blob.name).name
+                    full_container_blob_name = {container.name}/{blob.name}
                     file_path_on_share = self.config.mount_path + "/" + blob_name_without_dir
 
                     scanresult = self.clamav.scan_file(file_path_on_share)
@@ -62,17 +63,17 @@ class BlobScanner:
                     if scanresult.status == ScanStatus.FOUND:
                         ok = self.azstorage.move_blob_to_quarantine(container.name, blob.name)
                         if not ok:
-                            Log.error(f"Error moving virus-found blob {blob.name} to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
+                            Log.error(f"Error moving virus-found blob {full_container_blob_name} to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
                         else:
-                            Log.info(f"Virus found in file {file_path_on_share}. Moved to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
+                            Log.info(f"Virus found in file {full_container_blob_name}. Moved to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
 
                     elif scanresult.status == ScanStatus.OK:
                         self._set_blob_scan_status("no_virus", container.name, blob.name)
-                        Log.info(f"No virus found for {file_path_on_share}", 'BlobScanner')
+                        Log.info(f"No virus found for {full_container_blob_name}", 'BlobScanner')
 
                     elif scanresult.status == ScanStatus.ERROR:
                         self._set_blob_scan_status("error", container.name, blob.name)
-                        Log.error(f"Scan - error scanning file {container.name}/{file_path_on_share}. {scanresult.message}", 'BlobScanner')
+                        Log.error(f"Scan - error scanning file {full_container_blob_name}. {scanresult.message}", 'BlobScanner')
 
                     
                     ok = self.azstorage.delete_blob_in_file_share(blob_name_without_dir)
