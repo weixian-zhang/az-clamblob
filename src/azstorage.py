@@ -75,7 +75,7 @@ class AzStorage:
 
             sfc = self._get_share_client(file_path=blob_name_without_dir)
 
-            Log.info(f"Start copying blob:{blob_name} to fileshare:{self.config.azure_file_share_name} for scanning...")
+            Log.info(f"Start copying {blob_name} to fileshare:{self.config.azure_file_share_name} for scanning...", 'AzStorage')
        
             sfc.start_copy_from_url(src_blob_client.url+"?"+sasToken) # async call
 
@@ -90,7 +90,7 @@ class AzStorage:
                 else:
                     break
             
-            Log.info(f"Copy blob {blob_name} to fileshare for scanning completed successfully")
+            Log.info(f"Copy blob {blob_name} to fileshare for scanning completed successfully", 'AzStorage')
 
             return True
         
@@ -105,7 +105,7 @@ class AzStorage:
             src_blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
             dest_blob_client = self.blob_service_client.get_blob_client(container=self.config.quarantine_container_name, blob=blob_name_in_quarantine)
 
-            Log.info(f"Start moving blob {blob_name} to quaratine container {self.config.quarantine_container_name}...")
+            Log.info(f"Start moving blob {blob_name} to quaratine container {self.config.quarantine_container_name}...", 'AzStorage')
 
             dest_blob_client.start_copy_from_url(src_blob_client.url) # async call
 
@@ -122,7 +122,7 @@ class AzStorage:
 
             src_blob_client.delete_blob(delete_snapshots='include') # delete the original blob
             
-            Log.info(f"Moving blob {blob_name} to quaratine container completed successfully")
+            Log.info(f"Moving blob {blob_name} to quaratine container completed successfully", 'AzStorage')
 
             self.set_blob_metadata(self.config.quarantine_container_name,
                                    blob_name_in_quarantine, 
@@ -163,20 +163,6 @@ class AzStorage:
         except Exception as e:
             return False
         
-        
-    # def move_blob_from_blob_to_fileshare(self, file_path, dest_container_name, fsdata: bytes = None) -> bool:
-
-    #     cc = self.blob_service_client.get_container_client(dest_container_name)
-
-    #     if not cc.exists():
-    #         cc.create_container()
-
-    #     # download from file share
-    #     dsffs_ok, fsbytes = self.download_stream_from_file_share(file_path)
-
-    #     if not dsffs_ok:
-    #         Log.error(f"Error downloading file from file share: {file_path}")
-    #         return False
         
 
     def set_blob_metadata(self, container_name, blob_name, metadata: dict):
