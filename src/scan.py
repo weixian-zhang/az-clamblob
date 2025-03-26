@@ -38,7 +38,7 @@ class BlobScanner:
                 blobs = container_client.list_blobs()
 
                 for blob in blobs:
-
+                    
                     if self._is_blob_scanned(container.name, blob.name):
                         continue
 
@@ -61,12 +61,7 @@ class BlobScanner:
                     scanresult = self.clamav.scan_file(file_path_on_share)
 
                     if scanresult.status == ScanStatus.FOUND:
-                        ok = self.azstorage.move_blob_to_quarantine(container.name, blob.name)
-                        if not ok:
-                            Log.error(f"Error moving virus-found blob {full_container_blob_name} to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
-                        else:
-                            Log.info(f"Virus found in file {full_container_blob_name}. Moved to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
-
+                        self.quarantine_blob(container.name, blob.name)
                     elif scanresult.status == ScanStatus.OK:
                         self._set_blob_scan_status("no_virus", container.name, blob.name)
                         Log.info(f"No virus found for {full_container_blob_name}", 'BlobScanner')
@@ -81,11 +76,10 @@ class BlobScanner:
                         Log.error(f"deleting file {blob_name_without_dir} on file share", 'BlobScanner')
                         continue
 
-                    
-
 
         except Exception as e:
             Log.error(f"an error occurred: {str(e)}", 'BlobScanner')
+
 
     
     def _is_blob_scanned(self, container_name, blob_name):
@@ -107,18 +101,13 @@ class BlobScanner:
         self.azstorage.set_blob_metadata(container_name, blob_name, {"clamav_blob_scan": status})
 
 
-    def move_blob_to_quarantine(self, blob_bytes, container_name, blob_name):
-        # move blob to quarantine container
-        ok = self.azstorage.upload_stream_to_blob(blob_bytes, blob_name, self.config.quarantine_container_name)
-
+    def quarantine_blob(self, container_name, blob_name):
+        full_container_blob_name = f"{container_name}/{blob_name}"
+        ok = self.azstorage.move_blob_to_quarantine(container_name, blob_name)
         if not ok:
-            Log.error(f"Error moving blob {blob_name} to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
-            return False
-        
-        # delete blob from original container
-        ok = self.azstorage.delete_blob(container_name, blob_name)
+            Log.error(f"Error moving virus-found blob {full_container_blob_name} to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
+        else:
+            Log.info(f"Virus found in file {full_container_blob_name}. Moved to quarantine container {self.config.quarantine_container_name}", 'BlobScanner')
 
-        if not ok:
-            Log.error(f"Error deleting blob {blob_name} from container {container_name}", 'BlobScanner')
 
     
