@@ -54,6 +54,10 @@ class AzStorage:
             return False
     
     def copy_blob_to_file_share(self, blob_service_url, container_name, blob_name) -> bool:
+        '''
+        blob name is expected to container virtual directory structure and this method will handle this.
+        e.g. 'dir1/dir2/dir3/file.txt'
+        '''
 
         try:
             src_blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
@@ -97,15 +101,15 @@ class AzStorage:
     def move_blob_to_quarantine(self, container_name, blob_name) -> bool:
         
         try:
-            dest_blob_name = f'container_name_{blob_name}'
+            blob_name_in_quarantine = f'{container_name}/{blob_name}'
             src_blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-            dest_blob_client = self.blob_service_client.get_blob_client(container=self.config.quarantine_container_name, blob=dest_blob_name)
+            dest_blob_client = self.blob_service_client.get_blob_client(container=self.config.quarantine_container_name, blob=blob_name_in_quarantine)
 
             Log.info(f"Start moving blob {blob_name} to quaratine container {self.config.quarantine_container_name}...")
 
-            dest_blob_client.start_copy_from_url(src_blob_client.url, overwrite=True) # async call
+            dest_blob_client.start_copy_from_url(src_blob_client.url) # async call
 
-            # poll copy status
+            # poll move status
             while True:
                 properties = dest_blob_client.get_blob_properties()
                 copy_props = properties.copy
@@ -115,8 +119,16 @@ class AzStorage:
                      break 
                 else:
                     break
+
+            src_blob_client.delete_blob(delete_snapshots='include') # delete the original blob
             
             Log.info(f"Moving blob {blob_name} to quaratine container completed successfully")
+
+            self.set_blob_metadata(self.config.quarantine_container_name,
+                                   blob_name_in_quarantine, 
+                                   {"clamav_blob_scan": 'virus_found'})
+
+            return True
 
         except Exception as e:
             return False

@@ -17,7 +17,7 @@ class Config:
         self.clamav_host = 'localhost'
         self.clamav_port = 3310
         self.appinsights_key = ''
-        self.qurantine_container_name = 'quarantine'
+        self.quarantine_container_name = 'quarantine'
         self.azure_storage_name = ''
         self.azure_file_share_conn_string = ''
         self.azure_file_share_name = 'clamblob-scan'
@@ -29,7 +29,7 @@ class Config:
         self.clamav_host = os.getenv('CLAMAV_HOST') if os.getenv('CLAMAV_HOST') else 'localhost'
         self.clamav_port = int(os.getenv('CLAMAV_PORT')) if os.getenv('CLAMAV_PORT') else 3310
         self.appinsights_key = os.getenv('APP_INSIGHTS_INSTRUMENTATION_KEY')
-        self.qurantine_container_name = os.getenv('QUARANTINE_CONTAINER_NAME') if os.getenv('QUARANTINE_CONTAINER_NAME') else 'quarantine'
+        self.quarantine_container_name = os.getenv('QUARANTINE_CONTAINER_NAME') if os.getenv('QUARANTINE_CONTAINER_NAME') else 'quarantine'
         self.azure_storage_name = os.getenv('AZURE_STORAGE_NAME') if os.getenv('AZURE_STORAGE_NAME') else ''
         self.azure_file_share_conn_string = os.getenv('AZURE_FILE_SHARE_CONN_STRING') if os.getenv('AZURE_FILE_SHARE_CONN_STRING') else ''
         self.azure_file_share_name = os.getenv('AZURE_FILE_SHARE_NAME') if os.getenv('AZURE_FILE_SHARE_NAME') else 'clamblob-scan'
