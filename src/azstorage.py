@@ -20,6 +20,17 @@ class AzStorage:
     def get_blob_client(self):
         return self.blob_service_client
     
+
+    def create_container(self, container_name) -> bool:
+        try:
+            container_client = self.blob_service_client.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+            return True
+        except Exception as e:
+            Log.error(f"Error creating container: {str(e)}", 'AzStorage')
+            return False
+    
         
     def upload_stream_to_blob(self, data: bytes, container_name, blob_name) -> bool:
         try:
@@ -68,11 +79,39 @@ class AzStorage:
             
             Log.info(f"Copy blob {blob_name} to fileshare for scanning completed successfully", 'AzStorage')
 
-            return True
+            return True, ''
         
         except Exception as e:
+            return False, str(e)
+        
+    def is_blob_exists(self, container_name, blob_name) -> bool:
+        try:
+            blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            return blob_client.exists()
+        except Exception as e:
+            Log.error(f"Error checking if blob exists: {str(e)}", 'AzStorage')
             return False
         
+    def download_blob_to_stream(self, container_name, blob_name) -> list[bool,bytes]:
+        try:
+            blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            stream = io.BytesIO()
+            blob_client.download_blob().readinto(stream)
+            return True, stream.read()
+
+        except Exception as e:
+            Log.error(f"Error downloading blob: {str(e)}", 'AzStorage')
+            return None
+
+    def upload_blob_stream(self, data: bytes, container_name,  blob_name) -> bool:
+        try:
+            blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            input_stream = io.BytesIO(data)
+            blob_client.upload_blob(input_stream, blob_type="BlockBlob")
+            return True
+        except Exception as e:
+            Log.error(f"Error uploading blob: {str(e)}", 'AzStorage')
+            return False
 
     def move_blob_to_quarantine(self, container_name, blob_name) -> bool:
         
