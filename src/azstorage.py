@@ -1,7 +1,7 @@
 
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient, BlobClient, generate_blob_sas, BlobSasPermissions
-from azure.storage.fileshare import ShareFileClient
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
+from azure.storage.fileshare import ShareFileClient, ShareDirectoryClient
 from pathlib import Path  
 import log as Log
 import pytz
@@ -9,6 +9,7 @@ from config import Config
 import io
 from datetime import datetime, timedelta
 import time
+from util import Util
 
 class AzStorage:
     def __init__(self, config: Config):
@@ -40,7 +41,7 @@ class AzStorage:
         except Exception as e:
             return False
     
-    def copy_blob_to_file_share(self, blob_service_url, container_name, blob_name) -> bool:
+    def copy_blob_to_file_share(self, container_name, blob_name) -> bool:
         '''
         blob name is expected to container virtual directory structure and this method will handle this.
         e.g. 'dir1/dir2/dir3/file.txt'
@@ -62,7 +63,7 @@ class AzStorage:
 
             sfc = self._get_share_client(file_path=blob_name_without_dir)
 
-            Log.info(f"Start copying {blob_name} to fileshare:{self.config.azure_file_share_name} for scanning...", 'AzStorage')
+            Log.info(f"Start copying {Util.full_blob_name(container_name, blob_name)} to fileshare:{self.config.azure_file_share_name} for scanning...", 'AzStorage')
        
             sfc.start_copy_from_url(src_blob_client.url+"?"+sasToken) # async call
 
@@ -77,7 +78,7 @@ class AzStorage:
                 else:
                     break
             
-            Log.info(f"Copy blob {blob_name} to fileshare for scanning completed successfully", 'AzStorage')
+            Log.info(f"Copy blob {Util.full_blob_name(container_name, blob_name)} to fileshare for scanning completed successfully", 'AzStorage')
 
             return True, ''
         
@@ -96,8 +97,9 @@ class AzStorage:
         try:
             blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
             stream = io.BytesIO()
-            blob_client.download_blob().readinto(stream)
-            return True, stream.read()
+            num_bytes = blob_client.download_blob().readinto(stream)
+            b = stream.getvalue() if num_bytes > 0 else b'{}'
+            return True, b
 
         except Exception as e:
             Log.error(f"Error downloading blob: {str(e)}", 'AzStorage')
@@ -149,7 +151,6 @@ class AzStorage:
             return False
         
         
-    
     def delete_blob(self, container_name, blob_name) -> bool:
 
         try:
@@ -169,7 +170,6 @@ class AzStorage:
             return False
         
         
-
     def set_blob_metadata(self, container_name, blob_name, metadata: dict):
         blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
 
@@ -184,7 +184,17 @@ class AzStorage:
                 conn_str=self.config.azure_file_share_conn_string, share_name=self.config.azure_file_share_name, file_path=file_path)
 
 
+    def delete_all_in_file_share(self) -> bool:
+        '''
+        delete all files in the file share. Typically used for cleanup before scan.
+        '''
+        try:
+            sdc = ShareDirectoryClient.from_connection_string(self.config.azure_file_share_conn_string, 
+                                                              self.config.azure_file_share_name, directory_path='')
+            
+            for item in sdc.list_directories_and_files():
+                self.delete_blob_in_file_share(item.name)
 
-    # def delete_file_in_file_share(self, container_name, blob_name):
-    #     # Code to delete a blob from a container
-    #     pass
+            return True
+        except Exception as e:
+            return False
