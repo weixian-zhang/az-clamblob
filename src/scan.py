@@ -186,10 +186,16 @@ class BlobScanner:
             
             srJson = json.dumps(self.scan_report, indent=4)
             b = bytes(srJson, 'utf-8')
-            self.azstorage.upload_blob_stream(data=b, 
+            ok = self.azstorage.upload_blob_stream(data=b, 
                                               container_name=self.scan_report_container_name, 
                                               blob_name=self.scan_report_file_name)
+            
+            if not ok:
+                Log.error(f"Error uploading scan report {self.scan_report_file_name} to container {self.scan_report_container_name}", 'BlobScanner')
+                return False
+            
             Log.info(f"Scan report saved to {self.scan_report_container_name}/{self.scan_report_file_name}", 'BlobScanner')
+            
             return True
         except Exception as e:
             Log.error(f"Error saving scan report: {str(e)}", 'BlobScanner')

@@ -1,6 +1,6 @@
 
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, BlobType
 from azure.storage.fileshare import ShareFileClient, ShareDirectoryClient
 from pathlib import Path  
 import log as Log
@@ -109,10 +109,9 @@ class AzStorage:
         try:
             blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
             input_stream = io.BytesIO(data)
-            blob_client.upload_blob(input_stream, blob_type="BlockBlob")
+            blob_client.upload_blob(input_stream, blob_type=BlobType.BLOCKBLOB, overwrite=True)
             return True
         except Exception as e:
-            Log.error(f"Error uploading blob: {str(e)}", 'AzStorage')
             return False
 
     def move_blob_to_quarantine(self, container_name, blob_name) -> bool:
