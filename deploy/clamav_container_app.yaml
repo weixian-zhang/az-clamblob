@@ -13,7 +13,7 @@ properties:
     triggerType: Manual
     initContainers: null
     scale:
-      maxReplicas: 2
+      maxReplicas: 1
       minReplicas: 1
     ingress:
       # additionalPortMappings:
@@ -35,7 +35,6 @@ properties:
         memory: 2.0Gi 
       volumeMounts:
       - mountPath: "azfile"
-        # subPath: "scan-staging"
         volumeName: clamblob-scan
     volumes:
     - name: clamblob-scan

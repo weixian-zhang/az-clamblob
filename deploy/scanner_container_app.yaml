@@ -13,7 +13,7 @@ properties:
     triggerType: Manual
     initContainers: null
     scale:
-      maxReplicas: 2
+      maxReplicas: 1
       minReplicas: 1
   template:
     containers:
@@ -21,23 +21,6 @@ properties:
       name: clamblob-scanner
       resources: 
         cpu: 1.0
-        memory: 2.0Gi 
-      volumeMounts:
-      - mountPath: "/mnt"
-        volumeName: clamblob-scan
-    environmentVariables:
-    - name: MOUNT_PATH
-      value: "/mnt"
-    - name: APP_INSIGHTS_INSTRUMENTATION_KEY
-      value: "5bb85efc-b516-4116-aebb-65ca9dcd876f"
-    - name: CLAMAV_HOST
-      value: "clamblob-clamav.purplestone-6b6c9ac6.southeastasia.azurecontainerapps.io"
-    - name: CLAMAV_PORT
-      value: 3310
-    - QUARANTINE_CONTAINER_NAME:
-      value: "quarantine"
-    volumes:
-    - name: clamblob-scan
-      storageType: AzureFile
-      storageName: clamblob-scan
+        memory: 2.0Gi
+
   
