@@ -22,7 +22,7 @@ az containerapp env storage set \
 
   REM create scanner container app
   az containerapp create -n clamblob-scanner -g rg-clamblob --yaml "scanner_container_app.yaml" --system-assigned
-
+  az containerapp identity assign -n clamblob-scanner -g rg-clamblob --system-assigned
 
   REM update scanner container app env var
-  az containerapp update -n clamblob-scanner -g rg-clamblob --set-env-var "MOUNT_PATH=/azfile" "APP_INSIGHTS_INSTRUMENTATION_CONN_STRING={appinsights_conn_string}" "CLAMAV_HOST=clamblob-clamav" "CLAMAV_PORT=3310" "QUARANTINE_CONTAINER_NAME=quarantine" "AZURE_STORAGE_NAME={azure_storage_name}" "AZURE_FILE_SHARE_CONN_STRING={azure_file_share_conn_string}" "AZURE_FILE_SHARE_NAME=clamblob-scan" "AZURE_STORAGE_KEY={storage_account_key}"
+  az containerapp update -n clamblob-scanner -g rg-clamblob --set-env-var "MOUNT_PATH=/azfile" "APP_INSIGHTS_INSTRUMENTATION_CONN_STRING={appinsights_conn_string}" "CLAMAV_HOST=clamblob-clamav" "CLAMAV_PORT=3310" "QUARANTINE_CONTAINER_NAME=quarantine" "AZURE_FILE_SHARE_NAME=clamblob-scan" "AZURE_STORAGE_NAME={azure_storage_name}" "AZURE_STORAGE_KEY={storage_account_key}"

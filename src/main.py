@@ -27,7 +27,7 @@ try:
 
         scan()
 
-        time.sleep(3)
+        time.sleep(5)
 except Exception as e:
     Log.error(f"An error occurred: {str(e)}", 'Main')
 except KeyboardInterrupt:

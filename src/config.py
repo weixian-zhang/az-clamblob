@@ -31,9 +31,10 @@ class Config:
         self.appinsights_conn_str = os.getenv('APP_INSIGHTS_INSTRUMENTATION_CONN_STRING') if os.getenv('APP_INSIGHTS_INSTRUMENTATION_CONN_STRING') else ''
         self.quarantine_container_name = os.getenv('QUARANTINE_CONTAINER_NAME') if os.getenv('QUARANTINE_CONTAINER_NAME') else 'quarantine'
         self.azure_storage_name = os.getenv('AZURE_STORAGE_NAME') if os.getenv('AZURE_STORAGE_NAME') else ''
-        self.azure_file_share_conn_string = os.getenv('AZURE_FILE_SHARE_CONN_STRING') if os.getenv('AZURE_FILE_SHARE_CONN_STRING') else ''
-        self.azure_file_share_name = os.getenv('AZURE_FILE_SHARE_NAME') if os.getenv('AZURE_FILE_SHARE_NAME') else 'clamblob-scan'
         self.storage_account_key = os.getenv('AZURE_STORAGE_KEY') if os.getenv('AZURE_STORAGE_KEY') else ''
+        self.azure_file_share_conn_string = f'DefaultEndpointsProtocol=https;AccountName={self.azure_storage_name};AccountKey={self.storage_account_key};EndpointSuffix=core.windows.net'
+        self.azure_file_share_name = os.getenv('AZURE_FILE_SHARE_NAME') if os.getenv('AZURE_FILE_SHARE_NAME') else 'clamblob-scan'
+        
 
         if self.azure_storage_name == '':
             raise ValueError("AZURE_STORAGE_NAME is not set in the environment variables.")
