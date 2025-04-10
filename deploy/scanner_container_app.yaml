@@ -4,6 +4,7 @@ resourceGroup: rg-clamblob
 type: Microsoft.App/containerApps 
 properties:
   environmentId: /subscriptions/c9061bc7-fa28-41d9-a783-2600b29c6e2f/resourceGroups/rg-clamblob/providers/Microsoft.App/managedEnvironments/cae-common
+  workloadProfileName: "clamblob-workload-profile"
   configuration:
     replicaTimeout: 10
     replicaRetryLimit: 10
@@ -20,7 +21,7 @@ properties:
     - image: wxzd/clamblob:v0.1.0
       name: clamblob-scanner
       resources: 
-        cpu: 1.0
-        memory: 2.0Gi
+        cpu: 2.0
+        memory: 4.0Gi
 
   

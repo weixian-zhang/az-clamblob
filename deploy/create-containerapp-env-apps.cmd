@@ -1,6 +1,6 @@
 REM create container app environment
 az containerapp env create --assign-identity --enable-workload-profiles --resource-group "rg-clamblob" --name "cae-common" --location "southeastasia" --infrastructure-subnet-resource-id /subscriptions/c9061bc7-fa28-41d9-a783-2600b29c6e2f/resourceGroups/rg-clamblob/providers/Microsoft.Network/virtualNetworks/vnet-clamblob/subnets/CAEnvironment --logs-workspace-id c596239e-beda-4999-a79f-58e34d9881e4
-az containerapp env workload-profile set --resource-group rg-clamblob --name clamblob-workload-profile --workload-profile-type D4 --workload-profile-name dedicated_prof --min-nodes 1 --max-nodes 1
+az containerapp env workload-profile set --resource-group rg-clamblob --name cae-common --workload-profile-type D4 --workload-profile-name dedicated-d4-1 --min-nodes 1 --max-nodes 1
 
 REM mount azure file share to container app environment
 az containerapp env storage set \
