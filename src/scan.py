@@ -121,11 +121,25 @@ class BlobScanner:
         check if blob is already scanned by checking the metadata'
         '''
         try:
-            metadata = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties().metadata
+            props = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties()
+            metadata = props.metadata # self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties().metadata
             val = metadata.get("clamav_blob_scan", None)
-            if val is None or val != 'no_virus':
-                return False
-            return True
+
+            # if blob is in progress, check if last modified is >= 120 minutes and rescan blob if it is.
+            if val is not None and val == BlobScanStatus.IN_PROGRESS:
+                now = datetime.now(pytz.utc)
+                fmt = '%Y-%m-%d %H:%M:%S'
+                last_modified = datetime.strptime(f'{props.last_modified.year}-{props.last_modified.month}-{props.last_modified.day} {props.last_modified.hour}:{props.last_modified.minute}:{props.last_modified.second}', fmt)
+                now = datetime.strptime(f'{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}', fmt)
+                minuteDiff = (now-last_modified).total_seconds() / 60
+                if minuteDiff >= 120:
+                    return False
+
+            if val is not None and val == BlobScanStatus.NO_VIRUS:
+                return True
+            
+            return False
+        
         except Exception as e:
             Log.error(f"Error checking blob scan status: {str(e)}", 'BlobScanner')
             return False
