@@ -51,6 +51,9 @@ class BlobScanner:
                 if container.name in [self.config.quarantine_container_name, self.scan_report_container_name]:
                     continue
 
+                if len(self.config.containers_to_scan) > 0 and container.name not in self.config.containers_to_scan:
+                    continue
+
                 container_client = self.blob_service_client.get_container_client(container=container.name)
 
                 blobs = container_client.list_blobs()
@@ -78,7 +81,7 @@ class BlobScanner:
                             continue
 
                         #scan file on file share using clamav
-                        blob_name_without_dir = Path(blob.name).name
+                        blob_name_without_dir = Util.get_blob_name_to_file_share(container.name, blob.name) #Path(blob.name).name
                         file_path_on_share = self.config.mount_path + "/" + blob_name_without_dir
 
                         scanresult = self.clamav.scan_file(file_path_on_share)

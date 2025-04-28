@@ -1,0 +1,4 @@
+# for local testing
+
+docker volume create -d azfile2 --mounttype=bind --opt storageaccount=strgclamblob --opt sharename=myshare clamblob-scan
+docker run -it -v azfile:/azfile -p 3310:3310 clamav/clamav:latest

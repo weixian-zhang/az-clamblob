@@ -59,7 +59,7 @@ class AzStorage:
                 expiry=datetime.now(pytz.utc) + timedelta(hours=1)
             )
 
-            blob_name_without_dir = Path(blob_name).name
+            blob_name_without_dir = Util.get_blob_name_to_file_share(container_name, blob_name) #Path(blob_name).name
 
             sfc = self._get_share_client(file_path=blob_name_without_dir)
 
