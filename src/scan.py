@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 import pytz
 from util import Util
+import platform
 
 class BlobScanStatus:
     IN_PROGRESS = "in_progress"
@@ -28,7 +29,8 @@ class BlobScanner:
         self.azstorage = AzStorage(config)
         self.blob_service_client = self.azstorage.get_blob_client()
         self.clamav = ClamAVManager(config)
-        self.scan_report_file_name='scan_report.json'
+        self.hostname = platform.uname()[1]
+        self.scan_report_file_name=f'{self.hostname}-scan_report.json'
         self.scan_report_container_name='clamblob-logs'
         self.scan_report = {}
 

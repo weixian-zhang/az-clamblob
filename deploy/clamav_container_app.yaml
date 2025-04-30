@@ -1,5 +1,5 @@
 location: southeastasia 
-name: clamblob-clamav
+name: clamblob-clamav-3
 resourceGroup: rg-clamblob 
 type: Microsoft.App/containerApps 
 properties:
@@ -32,8 +32,8 @@ properties:
     - image: clamav/clamav
       name: clamblob-clamav
       resources: 
-        cpu: 2.0
-        memory: 4.0Gi 
+        cpu: 1.0
+        memory: 2.0Gi 
       volumeMounts:
       - mountPath: "azfile"
         volumeName: clamblob-scan

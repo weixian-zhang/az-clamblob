@@ -24,7 +24,7 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /app /app
 
 # Make port 80 available to the world outside this container
-#EXPOSE 80
+EXPOSE 8080
 
 # Run the application
 CMD ["python", "main.py"]

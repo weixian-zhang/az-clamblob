@@ -1,10 +1,10 @@
 location: southeastasia 
-name: clamblob-scanner
+name: clamblob-scanner-3
 resourceGroup: rg-clamblob 
 type: Microsoft.App/containerApps 
 properties:
   environmentId: /subscriptions/c9061bc7-fa28-41d9-a783-2600b29c6e2f/resourceGroups/rg-clamblob/providers/Microsoft.App/managedEnvironments/cae-common
-  workloadProfileName: "clamblob-workload-profile"
+  workloadProfileName: "dedicated-d4-1"
   configuration:
     replicaTimeout: 10
     replicaRetryLimit: 10
@@ -18,10 +18,18 @@ properties:
       minReplicas: 1
   template:
     containers:
-    - image: wxzd/clamblob:v0.1.0
+    - image: wxzd/clamblob:v0.3.0
       name: clamblob-scanner
       resources: 
-        cpu: 2.0
-        memory: 4.0Gi
+        cpu: 1.0
+        memory: 2.0Gi
+      probes:
+      - type: Startup
+        httpGet:
+          path: "/health"
+          port: 8080
+        initialDelaySeconds: 3
+        periodSeconds: 3
+    
 
   

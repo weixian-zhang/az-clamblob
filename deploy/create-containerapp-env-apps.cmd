@@ -15,14 +15,14 @@ az containerapp env storage set \
 
 
   REM create clamav container app
-  az containerapp create -n clamblob-clamav -g rg-clamblob --yaml "clamav_container_app.yaml"
+  az containerapp create -n clamblob-clamav-3 -g rg-clamblob --yaml "clamav_container_app.yaml"
 
   REM update clamav container app env var
-  az containerapp update -n clamblob-clamav -g rg-clamblob --set-env-vars "MAX_FILE_SIZE=40000M" "MAX_SCAN_SIZE=40000M" "MAX_FILES=50000"
+  az containerapp update -n clamblob-clamav-3 -g rg-clamblob --set-env-vars "MAX_FILE_SIZE=40000M" "MAX_SCAN_SIZE=40000M" "MAX_FILES=50000"
 
   REM create scanner container app
-  az containerapp create -n clamblob-scanner -g rg-clamblob --yaml "scanner_container_app.yaml" --system-assigned
-  az containerapp identity assign -n clamblob-scanner -g rg-clamblob --system-assigned
+  az containerapp create -n clamblob-scanner-1 -g rg-clamblob --yaml "scanner_container_app.yaml"
+  az containerapp identity assign -n clamblob-scanner-3 -g rg-clamblob --system-assigned
 
   REM update scanner container app env var
-  az containerapp update -n clamblob-scanner -g rg-clamblob --set-env-var "MOUNT_PATH=/azfile" "APP_INSIGHTS_INSTRUMENTATION_CONN_STRING={appinsights_conn_string}" "CLAMAV_HOST=clamblob-clamav" "CLAMAV_PORT=3310" "QUARANTINE_CONTAINER_NAME=quarantine" "AZURE_FILE_SHARE_NAME=clamblob-scan" "AZURE_STORAGE_NAME={azure_storage_name}" "AZURE_STORAGE_KEY={storage_account_key}"
+  az containerapp update -n clamblob-scanner-3 -g rg-clamblob --set-env-var "MOUNT_PATH=/azfile" "APP_INSIGHTS_INSTRUMENTATION_CONN_STRING={appinsights_conn_string}" "CLAMAV_HOST=clamblob-clamav" "CLAMAV_PORT=3310" "QUARANTINE_CONTAINER_NAME=quarantine" "AZURE_FILE_SHARE_NAME=clamblob-scan" "AZURE_STORAGE_NAME={azure_storage_name}" "AZURE_STORAGE_KEY={storage_account_key}" "CONTAINERS_TO_SCAN=container-1,container-2"

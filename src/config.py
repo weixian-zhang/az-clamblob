@@ -22,6 +22,7 @@ class Config:
         self.azure_file_share_conn_string = ''
         self.azure_file_share_name = 'clamblob-scan'
         self.storage_account_key = ''
+        self.port = 8080
         self.load()
 
     def load(self):
@@ -35,7 +36,8 @@ class Config:
         self.azure_file_share_conn_string = f'DefaultEndpointsProtocol=https;AccountName={self.azure_storage_name};AccountKey={self.storage_account_key};EndpointSuffix=core.windows.net'
         self.azure_file_share_name = os.getenv('AZURE_FILE_SHARE_NAME') if os.getenv('AZURE_FILE_SHARE_NAME') else 'clamblob-scan'
         self.containers_to_scan = [x.strip() for x in os.getenv('CONTAINERS_TO_SCAN').split(',')] if os.getenv('CONTAINERS_TO_SCAN') else []
-
+        self.port = int(os.getenv('PORT')) if os.getenv('PORT') else 8080
+        
         if self.azure_storage_name == '':
             raise ValueError("AZURE_STORAGE_NAME is not set in the environment variables.")
         if self.azure_file_share_conn_string == '':
