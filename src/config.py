@@ -23,6 +23,7 @@ class Config:
         self.azure_file_share_name = 'clamblob-scan'
         self.storage_account_key = ''
         self.port = 8080
+        self.containers_to_scan: list[str] = []
         self.load()
 
     def load(self):
