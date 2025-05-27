@@ -4,15 +4,15 @@ import log as Log
 from clamav import ClamAVManager, ScanStatus
 import json
 from datetime import datetime
-import pytz
+from model import BlobScanStatus
 from util import Util
 import platform
 
-class BlobScanStatus:
-    IN_PROGRESS = "in_progress"
-    ERROR = "error" 
-    NO_VIRUS = "no_virus"
-    VIRUS_FOUND = "virus_found"
+# class BlobScanStatus:
+#     IN_PROGRESS = "in_progress"
+#     ERROR = "error" 
+#     NO_VIRUS = "no_virus"
+#     VIRUS_FOUND = "virus_found"
 
 class BlobScanner:
     '''
@@ -27,7 +27,7 @@ class BlobScanner:
     def __init__(self, config):
         self.config = config
         self.azstorage = AzStorage(config)
-        self.blob_service_client = self.azstorage.get_blob_client()
+        #self.blob_service_client = self.azstorage.get_blob_client()
         self.clamav = ClamAVManager(config)
         self.hostname = platform.uname()[1]
         self.scan_report_file_name=f'{self.hostname}-scan_report.json'
@@ -37,6 +37,8 @@ class BlobScanner:
     def scan(self):
         
         try:
+
+            Log.info('starting scan', 'BlobScanner')
             
             ok = self.load_scan_report()
             if not ok:
@@ -45,61 +47,52 @@ class BlobScanner:
             #  clean up file share in case previous scan was previously interrupted
             self.azstorage.delete_all_in_file_share()
 
-            containers = self.blob_service_client.list_containers(include_metadata=True)
+            for container in self.config.containers_to_scan:
 
-            
-            for container in containers:
+                file_system_client = self.azstorage.set_current_dlfs_client(container) #self.blob_service_client.list_containers(include_metadata=True)
 
-                if container.name in [self.config.quarantine_container_name, self.scan_report_container_name]:
-                    continue
+                for item in file_system_client.get_paths(recursive=True):#containers:
 
-                if len(self.config.containers_to_scan) > 0 and container.name not in self.config.containers_to_scan:
-                    continue
+                    if item.is_directory or item.name in [self.config.quarantine_container_name, self.scan_report_container_name]:
+                        continue
 
-                container_client = self.blob_service_client.get_container_client(container=container.name)
-
-                blobs = container_client.list_blobs()
-
-                for blob in blobs:
-                    
                     try:
-
-                        if self._is_blob_scanned(container.name, blob.name):
-                            self.update_scan_report(container.name, blob.name, BlobScanStatus.NO_VIRUS)
+                        if self.azstorage._is_blob_scanned(container, item.name):
+                            self.update_scan_report(container, item.name, BlobScanStatus.NO_VIRUS)
                             continue
 
-                        self._set_blob_scan_status(BlobScanStatus.IN_PROGRESS, container.name, blob.name)
+                        self._set_file_scan_status(status=BlobScanStatus.IN_PROGRESS, file_path=item.name)
 
                         # set blob scan in progress
-                        self.update_scan_report(container.name, blob.name, BlobScanStatus.IN_PROGRESS)
+                        self.update_scan_report(container, item.name, BlobScanStatus.IN_PROGRESS)
 
                         # copy blob to file share for scanning
-                        blob_ok, msg = self.azstorage.copy_blob_to_file_share(container.name, blob.name)
+                        blob_ok, msg = self.azstorage.copy_blob_to_file_share(container, item.name)
 
                         if not blob_ok:
-                            self._set_blob_scan_status(BlobScanStatus.ERROR, container.name, blob.name)
-                            self.update_scan_report(container.name, blob.name, "error", msg)
-                            Log.error(f'Error copying blob {blob.name} from container {container.name}" to file share for scanning', 'BlobScanner')
+                            self._set_file_scan_status(status=BlobScanStatus.ERROR, file_path=item.name)
+                            self.update_scan_report(container, item.name, "error", msg)
+                            Log.error(f'Error copying blob {item.name} from container {container}" to file share for scanning', 'BlobScanner')
                             continue
 
                         #scan file on file share using clamav
-                        blob_name_without_dir = Util.get_blob_name_to_file_share(container.name, blob.name) #Path(blob.name).name
+                        blob_name_without_dir = Util.get_blob_name_to_file_share(container, item.name) #Path(blob.name).name
                         file_path_on_share = self.config.mount_path + "/" + blob_name_without_dir
 
                         scanresult = self.clamav.scan_file(file_path_on_share)
 
                         if scanresult.status == ScanStatus.FOUND:
-                            self.update_scan_report(container.name, blob.name, "virus_found")                          
-                            self.quarantine_blob(container.name, blob.name)
+                            self.update_scan_report(container, item.name, "virus_found")                          
+                            self.quarantine_blob(container, item.name)
                         elif scanresult.status == ScanStatus.OK:
-                            self._set_blob_scan_status("no_virus", container.name, blob.name)
-                            self.update_scan_report(container.name, blob.name, "no_virus")
-                            Log.info(f"No virus found for {Util.full_blob_name(container.name, blob.name)}", 'BlobScanner')
+                            self._set_file_scan_status(status=BlobScanStatus.NO_VIRUS, file_path=item.name)
+                            self.update_scan_report(container, item.name, BlobScanStatus.NO_VIRUS)
+                            Log.info(f"No virus found for {Util.full_blob_name(container, item.name)}", 'BlobScanner')
 
                         elif scanresult.status == ScanStatus.ERROR:
-                            self._set_blob_scan_status("error", container.name, blob.name)
-                            self.update_scan_report(container.name, blob.name, "no_virus", scanresult.message)
-                            Log.error(f"Scan - error scanning file {Util.full_blob_name(container.name, blob.name)}. {scanresult.message}", 'BlobScanner')
+                            self._set_file_scan_status(status=BlobScanStatus.ERROR, file_path=item.name)
+                            self.update_scan_report(container, item.name, BlobScanStatus.NO_VIRUS, scanresult.message)
+                            Log.error(f"Scan - error scanning file {Util.full_blob_name(container, item.name)}. {scanresult.message}", 'BlobScanner')
 
                         
                         ok = self.azstorage.delete_blob_in_file_share(blob_name_without_dir)
@@ -109,9 +102,69 @@ class BlobScanner:
 
 
                     except Exception as e:
-                        self._set_blob_scan_status("error", container.name, blob.name)
-                        self.update_scan_report(container.name, blob.name, "error", str(e))
-                        Log.error(f"Error scanning blob {Util.full_blob_name(container.name, blob.name)}: {str(e)}", 'BlobScanner')
+                        self._set_file_scan_status(status=BlobScanStatus.ERROR, file_path=item.name)
+                        self.update_scan_report(container, item.name, "error", str(e))
+                        Log.error(f"Error scanning blob {Util.full_blob_name(container, item.name)}: {str(e)}", 'BlobScanner')
+                    
+                    # if len(self.config.containers_to_scan) > 0 and container not in self.config.containers_to_scan:
+                    #     continue
+
+                    # container_client = self.blob_service_client.get_container_client(container=container)
+
+                    # blobs = container_client.list_blobs()
+
+                    # for blob in item:
+                        
+                    #     try:
+
+                    #         if self._is_blob_scanned(container.name, blob.name):
+                    #             self.update_scan_report(container.name, blob.name, BlobScanStatus.NO_VIRUS)
+                    #             continue
+
+                    #         self._set_file_scan_status(BlobScanStatus.IN_PROGRESS, container.name, blob.name)
+
+                    #         # set blob scan in progress
+                    #         self.update_scan_report(container.name, blob.name, BlobScanStatus.IN_PROGRESS)
+
+                    #         # copy blob to file share for scanning
+                    #         blob_ok, msg = self.azstorage.copy_blob_to_file_share(container.name, blob.name)
+
+                    #         if not blob_ok:
+                    #             self._set_file_scan_status(BlobScanStatus.ERROR, container.name, blob.name)
+                    #             self.update_scan_report(container.name, blob.name, "error", msg)
+                    #             Log.error(f'Error copying blob {blob.name} from container {container.name}" to file share for scanning', 'BlobScanner')
+                    #             continue
+
+                    #         #scan file on file share using clamav
+                    #         blob_name_without_dir = Util.get_blob_name_to_file_share(container.name, blob.name) #Path(blob.name).name
+                    #         file_path_on_share = self.config.mount_path + "/" + blob_name_without_dir
+
+                    #         scanresult = self.clamav.scan_file(file_path_on_share)
+
+                    #         if scanresult.status == ScanStatus.FOUND:
+                    #             self.update_scan_report(container.name, blob.name, "virus_found")                          
+                    #             self.quarantine_blob(container.name, blob.name)
+                    #         elif scanresult.status == ScanStatus.OK:
+                    #             self._set_file_scan_status("no_virus", container.name, blob.name)
+                    #             self.update_scan_report(container.name, blob.name, "no_virus")
+                    #             Log.info(f"No virus found for {Util.full_blob_name(container.name, blob.name)}", 'BlobScanner')
+
+                    #         elif scanresult.status == ScanStatus.ERROR:
+                    #             self._set_file_scan_status("error", container.name, blob.name)
+                    #             self.update_scan_report(container.name, blob.name, "no_virus", scanresult.message)
+                    #             Log.error(f"Scan - error scanning file {Util.full_blob_name(container.name, blob.name)}. {scanresult.message}", 'BlobScanner')
+
+                            
+                    #         ok = self.azstorage.delete_blob_in_file_share(blob_name_without_dir)
+                    #         if not ok:
+                    #             Log.error(f"deleting file {blob_name_without_dir} on file share", 'BlobScanner')
+                    #             continue
+
+
+                    #     except Exception as e:
+                    #         self._set_file_scan_status("error", container.name, blob.name)
+                    #         self.update_scan_report(container.name, blob.name, "error", str(e))
+                    #         Log.error(f"Error scanning blob {Util.full_blob_name(container.name, blob.name)}: {str(e)}", 'BlobScanner')
 
             # save scan report
             self.save_scan_report()
@@ -121,37 +174,38 @@ class BlobScanner:
             Log.error(f"an error occurred: {str(e)}", 'BlobScanner')
 
 
-    def _is_blob_scanned(self, container_name, blob_name):
-        '''
-        check if blob is already scanned by checking the metadata'
-        '''
-        try:
-            props = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties()
-            metadata = props.metadata # self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties().metadata
-            val = metadata.get("clamav_blob_scan", None)
+    # def _is_blob_scanned(self, container_name, blob_name):
+    #     '''
+    #     check if blob is already scanned by checking the metadata'
+    #     '''
+    #     try:
+    #         props = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties()
+    #         metadata = props.metadata # self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties().metadata
+    #         val = metadata.get("clamav_blob_scan", None)
 
-            # if blob is in progress, check if last modified is >= 120 minutes and rescan blob if it is.
-            if val is not None and val == BlobScanStatus.IN_PROGRESS:
-                now = datetime.now(pytz.utc)
-                fmt = '%Y-%m-%d %H:%M:%S'
-                last_modified = datetime.strptime(f'{props.last_modified.year}-{props.last_modified.month}-{props.last_modified.day} {props.last_modified.hour}:{props.last_modified.minute}:{props.last_modified.second}', fmt)
-                now = datetime.strptime(f'{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}', fmt)
-                minuteDiff = (now-last_modified).total_seconds() / 60
-                if minuteDiff >= 120:
-                    return False
+    #         # if blob is in progress, check if last modified is >= 120 minutes and rescan blob if it is.
+    #         if val is not None and val == BlobScanStatus.IN_PROGRESS:
+    #             now = datetime.now(pytz.utc)
+    #             fmt = '%Y-%m-%d %H:%M:%S'
+    #             last_modified = datetime.strptime(f'{props.last_modified.year}-{props.last_modified.month}-{props.last_modified.day} {props.last_modified.hour}:{props.last_modified.minute}:{props.last_modified.second}', fmt)
+    #             now = datetime.strptime(f'{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}', fmt)
+    #             minuteDiff = (now-last_modified).total_seconds() / 60
+    #             if minuteDiff >= 120:
+    #                 return False
 
-            if val is not None and val == BlobScanStatus.NO_VIRUS:
-                return True
+    #         if val is not None and val == BlobScanStatus.NO_VIRUS:
+    #             return True
             
-            return False
+    #         return False
         
-        except Exception as e:
-            Log.error(f"Error checking blob scan status: {str(e)}", 'BlobScanner')
-            return False
+    #     except Exception as e:
+    #         Log.error(f"Error checking blob scan status: {str(e)}", 'BlobScanner')
+    #         return False
 
     
-    def _set_blob_scan_status(self, status, container_name, blob_name):
-        self.azstorage.set_blob_metadata(container_name, blob_name, {"clamav_blob_scan": status})
+    def _set_file_scan_status(self, status, file_path):
+        status = {"clamav_blob_scan": status}
+        self.azstorage.set_blob_scan_status(path=file_path, status=status)
 
 
     def quarantine_blob(self, container_name, blob_name):
@@ -178,6 +232,8 @@ class BlobScanner:
         try:
             # createscan report container if not exists
             self.azstorage.create_container(self.scan_report_container_name)
+
+            _ = self.azstorage.set_current_dlfs_client(self.scan_report_container_name)
 
             if not self.azstorage.is_blob_exists(self.scan_report_container_name, self.scan_report_file_name):
                 return True
