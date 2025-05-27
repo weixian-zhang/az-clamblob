@@ -8,11 +8,11 @@ import pytz
 from util import Util
 import platform
 
-class BlobScanStatus:
-    IN_PROGRESS = "in_progress"
-    ERROR = "error" 
-    NO_VIRUS = "no_virus"
-    VIRUS_FOUND = "virus_found"
+# class BlobScanStatus:
+#     IN_PROGRESS = "in_progress"
+#     ERROR = "error" 
+#     NO_VIRUS = "no_virus"
+#     VIRUS_FOUND = "virus_found"
 
 class BlobScanner:
     '''
@@ -151,7 +151,7 @@ class BlobScanner:
 
     
     def _set_blob_scan_status(self, status, container_name, blob_name):
-        self.azstorage.set_blob_metadata(container_name, blob_name, {"clamav_blob_scan": status})
+        self.azstorage.set_blob_metadata(container_name, blob_name, status) #{"clamav_blob_scan": status})
 
 
     def quarantine_blob(self, container_name, blob_name):

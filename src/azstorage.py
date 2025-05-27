@@ -2,6 +2,7 @@
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, BlobType
 from azure.storage.fileshare import ShareFileClient, ShareDirectoryClient
+from azure.data.tables import TableServiceClient
 from pathlib import Path  
 import log as Log
 import pytz
@@ -10,16 +11,34 @@ import io
 from datetime import datetime, timedelta
 import time
 from util import Util
+from datetime import datetime
+
+class BlobScanStatus:
+    IN_PROGRESS = "in_progress"
+    ERROR = "error" 
+    NO_VIRUS = "no_virus"
+    VIRUS_FOUND = "virus_found"
 
 class AzStorage:
+
     def __init__(self, config: Config):
         self.config = config
         credential = DefaultAzureCredential()
+        self.table_service = TableServiceClient(credential=credential, endpoint=f'https://{self.config.azure_storage_name}.table.core.windows.net/')
         self.blob_service_client = BlobServiceClient(account_url=f'https://{self.config.azure_storage_name}.blob.core.windows.net/', 
                                                      credential=credential)
+        self.metadata_store = None
         
     def get_blob_client(self):
         return self.blob_service_client
+
+    def create_metadata_store_table(self) -> bool:
+        try:
+            self.metadata_store = self.table_service.create_table_if_not_exists(table_name=self.config.azure_metadata_store_table_name)
+            return True
+        except Exception as e:
+            Log.error(f"Error creating metadata table: {str(e)}", 'AzStorage')
+            return False
     
 
     def create_container(self, container_name) -> bool:
@@ -141,8 +160,7 @@ class AzStorage:
             Log.info(f"Moving blob {blob_name} to quaratine container completed successfully", 'AzStorage')
 
             self.set_blob_metadata(self.config.quarantine_container_name,
-                                   blob_name_in_quarantine, 
-                                   {"clamav_blob_scan": 'virus_found'})
+                                   blob_name_in_quarantine, BlobScanStatus.VIRUS_FOUND)
 
             return True
 
@@ -169,14 +187,63 @@ class AzStorage:
             return False
         
         
-    def set_blob_metadata(self, container_name, blob_name, metadata: dict):
-        blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+    def set_blob_metadata(self, container_name, blob_name, status: str):
+        # blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
 
-        # Retrieve existing metadata, if desired
-        blob_metadata = blob_client.get_blob_properties().metadata
-        blob_metadata.update(metadata)
-        blob_client.set_blob_metadata(metadata=blob_metadata)
+        # # Retrieve existing metadata, if desired
+        # blob_metadata = blob_client.get_blob_properties().metadata
+        # blob_metadata.update(metadata)
+        # blob_client.set_blob_metadata(metadata=blob_metadata)
+        rowkey = f"{container_name}_{blob_name}"
 
+        entity = {
+            u'PartitionKey': container_name,
+            u'RowKey': rowkey,
+            u'status': status,
+            u'last_updated': datetime.now(pytz.utc).isoformat(),
+        }
+
+        self.metadata_store.upsert_entity(entity)
+
+    def _is_blob_scanned(self, container_name, blob_name):
+        '''
+        check if blob is already scanned by checking the metadata'
+        '''
+
+        try:
+            # props = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties()
+            # metadata = props.metadata # self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties().metadata
+            # val = metadata.get("clamav_blob_scan", None)
+
+            entity = self.metadata_store.get_entity(container_name, self._metadata_store_row_key(container_name, blob_name))
+            status = entity.get('status', None)
+            last_updated = entity.get('last_updated', None)
+
+            # if blob is in progress, check if last modified is >= 120 minutes and rescan blob if it is.
+            if status is not None and status == BlobScanStatus.IN_PROGRESS:
+                now = datetime.now(pytz.utc)
+                fmt = '%Y-%m-%d %H:%M:%S'
+                last_modified = datetime.strptime(f'{props.last_modified.year}-{props.last_modified.month}-{props.last_modified.day} {props.last_modified.hour}:{props.last_modified.minute}:{props.last_modified.second}', fmt)
+                now = datetime.strptime(f'{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}', fmt)
+                minuteDiff = (now-last_modified).total_seconds() / 60
+                if minuteDiff >= 120:
+                    return False
+
+            if val is not None and val == BlobScanStatus.NO_VIRUS:
+                return True
+            
+            return False
+        
+        except Exception as e:
+            Log.error(f"Error checking blob scan status: {str(e)}", 'BlobScanner')
+            return False
+
+
+    def _metadata_store_row_key(self, container_name, blob_name) -> str:
+        '''
+        create a row key for the metadata store table.
+        '''
+        return f"{container_name}_{blob_name}"
 
     def _get_share_client(self, file_path) -> ShareFileClient:
         return ShareFileClient.from_connection_string(

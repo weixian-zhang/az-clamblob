@@ -37,6 +37,7 @@ class Config:
         self.azure_file_share_name = os.getenv('AZURE_FILE_SHARE_NAME') if os.getenv('AZURE_FILE_SHARE_NAME') else 'clamblob-scan'
         self.containers_to_scan = [x.strip() for x in os.getenv('CONTAINERS_TO_SCAN').split(',')] if os.getenv('CONTAINERS_TO_SCAN') else []
         self.port = int(os.getenv('PORT')) if os.getenv('PORT') else 8080
+        self.azure_metadata_store_table_name = os.getenv('AZURE_METADATA_STORE_TABLE_NAME') if os.getenv('AZURE_METADATA_STORE_TABLE_NAME') else 'metadata'
         
         if self.azure_storage_name == '':
             raise ValueError("AZURE_STORAGE_NAME is not set in the environment variables.")
