@@ -21,7 +21,7 @@ az containerapp env storage set \
   az containerapp update -n clamblob-clamav-3 -g rg-clamblob --set-env-vars "MAX_FILE_SIZE=40000M" "MAX_SCAN_SIZE=40000M" "MAX_FILES=50000"
 
   REM create scanner container app
-  az containerapp create -n clamblob-scanner-1 -g rg-clamblob --yaml "scanner_container_app.yaml"
+  az containerapp create -n clamblob-scanner-3 -g rg-clamblob --yaml "scanner_container_app.yaml"
   az containerapp identity assign -n clamblob-scanner-3 -g rg-clamblob --system-assigned
 
   REM update scanner container app env var
