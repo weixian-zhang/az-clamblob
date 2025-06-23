@@ -66,20 +66,23 @@ class BlobScanner:
                         # set blob scan in progress
                         self.update_scan_report(container, item.name, BlobScanStatus.IN_PROGRESS)
 
+                        # no need to copy to file share as blob containre is directly mounted
                         # copy blob to file share for scanning
-                        blob_ok, msg = self.azstorage.copy_blob_to_file_share(container, item.name)
+                        # blob_ok, msg = self.azstorage.copy_blob_to_file_share(container, item.name)
 
-                        if not blob_ok:
-                            self._set_file_scan_status(status=BlobScanStatus.ERROR, file_path=item.name)
-                            self.update_scan_report(container, item.name, "error", msg)
-                            Log.error(f'Error copying blob {item.name} from container {container}" to file share for scanning', 'BlobScanner')
-                            continue
+                        # if not blob_ok:
+                        #     self._set_file_scan_status(status=BlobScanStatus.ERROR, file_path=item.name)
+                        #     self.update_scan_report(container, item.name, "error", msg)
+                        #     Log.error(f'Error copying blob {item.name} from container {container}" to file share for scanning', 'BlobScanner')
+                        #     continue
 
                         #scan file on file share using clamav
-                        blob_name_without_dir = Util.get_blob_name_to_file_share(container, item.name) #Path(blob.name).name
-                        file_path_on_share = self.config.mount_path + "/" + blob_name_without_dir
+                        # blob_name_without_dir = Util.get_blob_name_to_file_share(container, item.name) #Path(blob.name).name
+                        # file_path_on_share = self.config.mount_path + "/" + blob_name_without_dir
 
-                        scanresult = self.clamav.scan_file(file_path_on_share)
+                        blob_mount_path = self.config.mount_path + "/" + item.name
+
+                        scanresult = self.clamav.scan_file(blob_mount_path)
 
                         if scanresult.status == ScanStatus.FOUND:
                             self.update_scan_report(container, item.name, "virus_found")                          
@@ -95,10 +98,10 @@ class BlobScanner:
                             Log.error(f"Scan - error scanning file {Util.full_blob_name(container, item.name)}. {scanresult.message}", 'BlobScanner')
 
                         
-                        ok = self.azstorage.delete_blob_in_file_share(blob_name_without_dir)
-                        if not ok:
-                            Log.error(f"deleting file {blob_name_without_dir} on file share", 'BlobScanner')
-                            continue
+                        # ok = self.azstorage.delete_blob_in_file_share(blob_name_without_dir)
+                        # if not ok:
+                        #     Log.error(f"deleting file {blob_name_without_dir} on file share", 'BlobScanner')
+                        #     continue
 
 
                     except Exception as e:

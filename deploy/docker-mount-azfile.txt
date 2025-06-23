@@ -1,4 +1,12 @@
 # for local testing
 
-docker volume create -d azfile2 --mounttype=bind --opt storageaccount=strgclamblob --opt sharename=myshare clamblob-scan
+docker volume create -d azfile --mounttype=bind --opt storageaccount=strgclamblob --opt sharename=myshare clamblob-scan
 docker run -it -v azfile:/azfile -p 3310:3310 clamav/clamav:latest
+
+# create volumn on local path
+# local path mounted with Azure Blob Container using rclone and winfsp
+# docker volume dir on Windows: \\wsl.localhost\docker-desktop\mnt\docker-desktop-disk\data\docker\volumes\azblob-container-1\_data
+
+docker volume create --opt type=none --opt o=bind --opt device=C:\mount\strgclamblob\c1 azblob-container-1
+
+docker run -it -v azblob-container-1:/azfile -p 3310:3310 clamav/clamav:latest
