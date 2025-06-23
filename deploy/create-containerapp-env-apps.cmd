@@ -15,7 +15,7 @@ az containerapp env storage set \
 
 
   REM create clamav container app
-  az containerapp create -n clamblob-clamav-3 -g rg-clamblob --yaml "clamav_container_app.yaml"
+  az containerapp create -n clamblob-clamav-1 -g rg-clamblob --yaml "clamav_container_app.yaml"
 
   REM update clamav container app env var
   az containerapp update -n clamblob-clamav-3 -g rg-clamblob --set-env-vars "MAX_FILE_SIZE=40000M" "MAX_SCAN_SIZE=40000M" "MAX_FILES=50000"

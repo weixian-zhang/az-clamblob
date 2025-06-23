@@ -1,5 +1,5 @@
 location: southeastasia 
-name: clamblob-scanner-3
+name: clamblob-scanner-1
 resourceGroup: rg-clamblob 
 type: Microsoft.App/containerApps 
 properties:
