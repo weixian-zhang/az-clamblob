@@ -17,14 +17,6 @@ app = FastAPI()
 async def health_check():
     return {"status": "healthy"}
 
-# def scan():
-
-#     try:
-#         scanner = BlobScanner(config)
-#         scanner.scan()
-#     except Exception as e:
-#         Log.error(f"Main - an error occurred: {str(e)}", 'Main')
-
 def scan():
     try:
         while True:

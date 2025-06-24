@@ -2,25 +2,39 @@
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
 2. choco install kubernetes-cli azure-kubelogin k9s
+3. choco install terraform --pre 
 
-2. deploy AKS with main.tf
+### Deploy and configure AKS Cluster
 
-3. create kube namespace
+4. deploy AKS using Terraform - terraform apply main.tf --auto-approve
+
+5. In Portal, AKS -> Security Configuration
+    - Enable Entra authentication and Azure RBAC
+    - Menu -> Service Connectors -> create service connection to Storage Blob
+   
+6. In Portal, grant user access to AKS with role "Azure Kubernetes Service RBAC Admin"
+   
+7. connect to AKS
+az aks get-credentials --resource-group rg-clamblob-aks --name aks-clamblob --overwrite-existing
+
+### Setup Kubernetes artifacts  
+
+8. create kube namespace
    kubectl create ns clamblob
 
-4. create secret
+9. create kubernetes secret to mount Storage container.
+(create once only as all pods will use the same secret)
 
 kubectl create secret generic azure-secrets -n clamblob 
    --from-literal APP_INSIGHTS_INSTRUMENTATION_CONN_STRING="" 
    --from-literal azurestorageaccountname="strgclamblob"
    --from-literal azurestorageaccountkey=""
 
-kubectl create secret generic azure-secrets -n clamblob 
-   --from-literal APP_INSIGHTS_INSTRUMENTATION_CONN_STRING="" 
-   --from-literal AZURE_STORAGE_KEY=""
+10. update scanner.yaml spec.serviceAccountName with service account name from Service Connection
 
-1. In Portal, enable Entra authn and Azure RBAC
-
-2. In Portal, grant user access to AKS with role "Azure Kubernetes Service RBAC Admin" 
+11. deploy pv.yaml
+12. deploy pvc.yaml
+13. deploy deployment-clamav.yaml
+14. deploy deployment-scanner.yaml
 
 

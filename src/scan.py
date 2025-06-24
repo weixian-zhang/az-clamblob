@@ -61,6 +61,8 @@ class BlobScanner:
                             self.update_scan_report(container, item.name, BlobScanStatus.NO_VIRUS)
                             continue
 
+                        Log.info(f'scanning {item.name}', 'BlobScanner')
+
                         self._set_file_scan_status(status=BlobScanStatus.IN_PROGRESS, file_path=item.name)
 
                         # set blob scan in progress
@@ -85,6 +87,7 @@ class BlobScanner:
                         scanresult = self.clamav.scan_file(blob_mount_path)
 
                         if scanresult.status == ScanStatus.FOUND:
+                            Log.info(f'Virus found on {item.name}, moving file to quarentine container', 'BlobScanner')
                             self.update_scan_report(container, item.name, "virus_found")                          
                             self.quarantine_blob(container, item.name)
                         elif scanresult.status == ScanStatus.OK:
