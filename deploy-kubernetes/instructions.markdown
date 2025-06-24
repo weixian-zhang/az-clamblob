@@ -1,7 +1,7 @@
 1. install chocolatey
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-2. choco install kubernetes-cli azure-kubelogin
+2. choco install kubernetes-cli azure-kubelogin k9s
 
 2. deploy AKS with main.tf
 
@@ -10,7 +10,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 
 4. create secret
 
-kubectl create secret generic appinsights-conn-string -n clamblob --from-literal appinsightsconnstring=strgclamblob --from-literal azurestorageaccountkey="KEY" --type=Opaque
+kubectl create secret generic azure-secrets -n clamblob 
+   --from-literal APP_INSIGHTS_INSTRUMENTATION_CONN_STRING="" 
+   --from-literal azurestorageaccountname="strgclamblob"
+   --from-literal azurestorageaccountkey=""
 
 kubectl create secret generic azure-secrets -n clamblob 
    --from-literal APP_INSIGHTS_INSTRUMENTATION_CONN_STRING="" 
