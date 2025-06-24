@@ -65,7 +65,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   default_node_pool {
     name                = "default"
-    node_count          = 1
+    node_count          = 2
     vm_size             = "standard_d4s_v3"
     vnet_subnet_id      = azurerm_subnet.aks_subnet.id
   }
@@ -84,9 +84,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
     load_balancer_sku = "standard"
   }
 
-
   role_based_access_control_enabled = true
   oidc_issuer_enabled               = true
+  workload_identity_enabled = true
 }
 
 #-------------------------------------------------------

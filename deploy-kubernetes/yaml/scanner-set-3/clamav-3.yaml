@@ -1,33 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: clamav-1
+  name: clamav-3
   namespace: clamblob
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: clamav-1
+      app: clamav-3
   template:
     metadata:
       labels:
-        app: clamav-1
+        app: clamav-3
     spec:
       containers:
-        - name: clamav-1
+        - name: clamav-3
           image: clamav/clamav
           imagePullPolicy: Always
           ports:
             - containerPort: 3310
           resources:
             requests:
-              memory: "256Mi"
+              memory: "2000Mi"
               cpu: "250m"
             limits:
               memory: "4000Mi"
               cpu: "500m"
           volumeMounts:
-            - name: container-1
+            - name: container-3
               mountPath: "/azfile" # named azfile to prevent code change
               readOnly: false
 
@@ -40,20 +40,20 @@ spec:
             value: "50000"
 
       volumes:
-      - name: container-1
+      - name: container-3
         persistentVolumeClaim:
-          claimName: pvc-container-1
+          claimName: pvc-container-3
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-clamav-1
+  name: service-clamav-3
   namespace: clamblob
 spec:
   selector:
-    app: clamav-1
+    app: clamav-3
   ports:
     - protocol: TCP
       port: 3310

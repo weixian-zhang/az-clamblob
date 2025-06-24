@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scanner-2
+  namespace: clamblob
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scanner-2
+  template:
+    metadata:
+      labels:
+        app: scanner-2
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: sc-account-fa9a83f1-1f23-4258-9a14-2f24c283f000
+      containers:
+        - name: scanner-2
+          image: wxzd/clamblob:v0.5.0
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          env:
+          - name: MOUNT_PATH
+            value: "/azfile"
+          - name: APP_INSIGHTS_INSTRUMENTATION_CONN_STRING
+            valueFrom:
+              secretKeyRef:
+                name: azure-secrets
+                key: APP_INSIGHTS_INSTRUMENTATION_CONN_STRING
+          - name: CLAMAV_HOST
+            value: "service-clamav-2" # service name of clamav
+          - name: CLAMAV_PORT
+            value: "3310"
+          - name: QUARANTINE_CONTAINER_NAME
+            value: "quarantine"
+          - name: AZURE_STORAGE_NAME
+            valueFrom:
+              secretKeyRef:
+                name: azure-secrets
+                key: azurestorageaccountname
+          - name: AZURE_STORAGE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: azure-secrets
+                key: azurestorageaccountkey
+          - name: CONTAINERS_TO_SCAN
+            value: "container-2"
