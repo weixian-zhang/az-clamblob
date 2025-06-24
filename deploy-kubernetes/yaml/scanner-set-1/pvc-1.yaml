@@ -10,4 +10,4 @@ spec:
     requests:
       storage: 1000000Gi
   volumeName: pv-container-1
-  storageClassName: azureblob-fuse
+  storageClassName: azureblob-fuse-premium

@@ -11,17 +11,21 @@ spec:
   accessModes:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain  # If set as "Delete" container would be removed after pvc deletion
-  storageClassName: azureblob-fuse
+  storageClassName: azureblob-fuse-premium
   mountOptions:
     - -o allow_other
     - --file-cache-timeout-in-seconds=120
+    - --use-adls=true
   csi:
     driver: blob.csi.azure.com
     # volumeid has to be unique for every identical storage blob container in the cluster
     # character `#`and `/` are reserved for internal use and cannot be used in volumehandle
     volumeHandle: strgclamblob_container-1
-    volumeAttributes:
+    volumeAttributes:               #* important section
+      resourceGroup: aks-apps_group
+      storageAccount: strgclamblob
       containerName: container-1
+      mountPermissions: "0777"  
     nodeStageSecretRef:
       name: azure-secrets
       namespace: clamblob

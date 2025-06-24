@@ -24,12 +24,20 @@ spec:
               memory: "256Mi"
               cpu: "250m"
             limits:
-              memory: "512Mi"
+              memory: "4000Mi"
               cpu: "500m"
           volumeMounts:
             - name: container-1
               mountPath: "/azfile" # named azfile to prevent code change
               readOnly: false
+
+          env:
+          - name: MAX_FILE_SIZE
+            value: "40000M"
+          - name: MAX_SCAN_SIZE
+            value: "40000M"
+          - name: MAX_FILES
+            value: "50000"
 
       volumes:
       - name: container-1
