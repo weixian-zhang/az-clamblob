@@ -53,3 +53,5 @@ spec:
                 key: azurestorageaccountkey
           - name: CONTAINERS_TO_SCAN
             value: "container-2"
+          - name: USE_STORAGE_KEY_AUTH
+            value: "true"

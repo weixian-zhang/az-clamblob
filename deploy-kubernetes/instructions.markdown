@@ -6,7 +6,8 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 
 ### Deploy and configure AKS Cluster
 
-4. deploy AKS using Terraform - terraform apply main.tf --auto-approve
+4. deploy AKS using Terraform
+   terraform apply --auto-approve
 
 5. In Portal, AKS -> Security Configuration
     - Enable Entra authentication and Azure RBAC
@@ -33,8 +34,12 @@ kubectl create secret generic azure-secrets -n clamblob
 10. update scanner.yaml spec.serviceAccountName with service account name from Service Connection
 
 11. deploy pv.yaml
+    - change resource group
+    - change storageAccount
+    - 
 12. deploy pvc.yaml
 13. deploy deployment-clamav.yaml
 14. deploy deployment-scanner.yaml
+    - change container name
 
 
