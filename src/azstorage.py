@@ -30,8 +30,13 @@ class AzStorage:
 
         account_url = f"https://{self.config.azure_storage_name}.dfs.core.windows.net"
 
-        self.blob_service_client = BlobServiceClient(account_url=f'https://{self.config.azure_storage_name}.blob.core.windows.net/', 
-                                                     credential=credential)
+        if self.config.use_storage_key_auth:
+            self.blob_service_client = BlobServiceClient.from_connection_string(
+                f'DefaultEndpointsProtocol=https;AccountName={config.azure_storage_name};AccountKey={config.storage_account_key};EndpointSuffix=core.windows.net'
+            )
+        else:
+            self.blob_service_client = BlobServiceClient(account_url=f'https://{self.config.azure_storage_name}.blob.core.windows.net/', 
+                                                        credential=credential)
     
         self.dls_client = DataLakeServiceClient(account_url, credential=credential)
 
