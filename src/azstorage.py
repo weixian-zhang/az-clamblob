@@ -1,7 +1,7 @@
 
 import os
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, BlobType
+from azure.storage.blob import BlobServiceClient, StandardBlobTier #generate_blob_sas, BlobSasPermissions, BlobType
 from azure.storage.fileshare import ShareFileClient, ShareDirectoryClient
 from azure.storage.filedatalake import (
     DataLakeServiceClient,
@@ -132,6 +132,7 @@ class AzStorage:
                 raise ValueError("Current Data Lake File System Client is not set. Call set_current_dlfs_client() first.")
             
             file = self.current_dlfs_client.get_file_client(blob_name)
+            
             return file.exists()
             # blob_client = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
             # return blob_client.exists()
@@ -264,19 +265,45 @@ class AzStorage:
             return True
         except Exception as e:
             return False
+    
+    def set_blob_tier_to_cool(self, container_name, blob_name) -> bool:
+        try:
+
+            blob = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            blob_tier = blob.get_blob_properties().blob_tier
+
+            if blob_tier == StandardBlobTier.HOT:
+                Log.info(f"Setting blob tier to Cool for {Util.full_blob_name(container_name, blob_name)}", 'AzStorage')
+                blob.set_standard_blob_tier(StandardBlobTier.COOL)
+
+        except Exception as e:
+            Log.error(f"Error setting blob tier: {str(e)}", 'AzStorage')
         
     
     def _is_blob_scanned(self,container_name, blob_name) -> bool:
         '''
         check if blob is already scanned by checking the metadata'
+        *** This function also updates blob tier to Cold if the blob is scanned and has no virus.
         '''
         try:
             if self.current_dlfs_client is None:
                 raise ValueError("azstorage/move_blob_to_quarantine - Current Data Lake File System Client is not set. Call set_current_dlfs_client() first.")
 
+            # ignore Cool tier
+            blob = self.blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+            blob_tier = blob.get_blob_properties().blob_tier # Ensure the blob exists and properties can be retrieved
+            if blob_tier == StandardBlobTier.COOL:
+                return True
+
             file = self.current_dlfs_client.get_file_client(blob_name)
             props = file.get_file_properties() # self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties().metadata
             val = props.metadata.get("clamav_blob_scan", None)
+            
+            # * set tier to Cool if not already is
+            if val is not None and val == BlobScanStatus.NO_VIRUS:
+                self.set_blob_tier_to_cool(container_name, blob_name)
+                Log.info(f"Blob {Util.full_blob_name(container_name, blob_name)} has been scanned and found to be clean. Setting tier to Cool.", 'AzStorage')
+                return True
 
             # if blob is in progress, check if last modified is >= 120 minutes and rescan blob if it is.
             if val is not None and val == BlobScanStatus.IN_PROGRESS:
@@ -288,9 +315,6 @@ class AzStorage:
                 if minuteDiff >= 120:
                     Log.info(f'{Util.full_blob_name(container_name, blob_name)} in_progress status over 120 mins, rescanning file', 'AzStorage')
                     return False
-
-            if val is not None and val == BlobScanStatus.NO_VIRUS:
-                return True
             
             return False
         

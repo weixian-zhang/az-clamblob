@@ -1,16 +1,30 @@
 from scan import BlobScanner
 import time
 import log as Log
-from config import Config
+from config import Config, ClamAvHost
 from clamav import ClamAVManager
 from fastapi import FastAPI
 import uvicorn
 import threading
 
 config = Config()
-clamav = ClamAVManager(config)
 
 app = FastAPI()
+
+def are_all_clamav_hosts_reachable(hosts: list[ClamAvHost]) -> bool:
+    success_count = len(hosts)
+    for h in hosts:
+        try:
+            ok, msg = ClamAVManager(h.host, h.port).ping()
+            if ok:
+                success_count -= 1
+            else:
+                Log.error(f"ClamAV server '{h.host}:{h.port}' is not reachable: {msg}", 'Main')
+                return False
+        except Exception as e:
+            Log.error(f"ClamAV server '{h.host}:{h.port}' is not reachable: {str(e)}", 'Main')
+            return False
+    return True if success_count == 0 else False
 
 #required by container app startup check
 @app.get("/health")
@@ -21,9 +35,8 @@ def scan():
     try:
         while True:
             
-            ok, _ = clamav.ping()
+            ok = are_all_clamav_hosts_reachable(config.clamav_hosts)
             if not ok:
-                Log.error(f"ClamAV server '{config.clamav_host}:{config.clamav_port}' is not ready or not reachable.")
                 time.sleep(5)
                 continue
 

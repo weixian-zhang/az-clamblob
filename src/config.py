@@ -19,8 +19,8 @@ class Config:
     
     def __init__(self) -> None:
         self.mount_path = ''
-        self.clamav_host = 'localhost'
-        self.clamav_port = 3310
+        self.clamav_hosts = [ClamAvHost('localhost', 3310)]
+        #self.clamav_port = 3310
         self.appinsights_conn_str = ''
         self.quarantine_container_name = 'quarantine'
         self.azure_storage_name = ''
@@ -34,7 +34,7 @@ class Config:
 
     def load(self):
         self.mount_path = os.getenv('MOUNT_PATH')
-        self.clamav_host =  self.get_clamav_hosts()
+        self.clamav_hosts =  self.get_clamav_hosts()
         #self.clamav_port = int(os.getenv('CLAMAV_PORT')) if os.getenv('CLAMAV_PORT') else 3310
         self.appinsights_conn_str = os.getenv('APP_INSIGHTS_INSTRUMENTATION_CONN_STRING') if os.getenv('APP_INSIGHTS_INSTRUMENTATION_CONN_STRING') else ''
         self.quarantine_container_name = os.getenv('QUARANTINE_CONTAINER_NAME') if os.getenv('QUARANTINE_CONTAINER_NAME') else 'quarantine'

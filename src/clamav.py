@@ -25,8 +25,10 @@ class ScanResult:
 
 
 class ClamAVManager:
-    def __init__(self, config: Config):
-        self.clamav = clamd.ClamdNetworkSocket(config.clamav_host, config.clamav_port)
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.clamav = clamd.ClamdNetworkSocket(host, port)
 
     def ping(self) -> list[bool,str]:
         

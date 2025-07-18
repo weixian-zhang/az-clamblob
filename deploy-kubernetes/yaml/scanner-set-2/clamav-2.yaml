@@ -20,12 +20,12 @@ spec:
           ports:
             - containerPort: 3310
           resources:
-            requests:
-              memory: "2000Mi"
-              cpu: "250m"
-            limits:
-              memory: "4000Mi"
-              cpu: "500m"
+           requests:
+              memory: "4Gi" #"256Mi"
+              cpu: "2" # "250m"
+           limits:
+              memory: "4Gi" #"512Mi"
+              cpu: "2" #"500m"
           volumeMounts:
             - name: container-2
               mountPath: "/azfile" # named azfile to prevent code change
