@@ -7,7 +7,7 @@ from datetime import datetime
 from model import BlobScanStatus
 from util import Util
 import platform
-from multiprocessing import Process
+import threading
 
 # class BlobScanStatus:
 #     IN_PROGRESS = "in_progress"
@@ -59,6 +59,10 @@ class BlobScanner:
 
             batches, total_files_to_scan = self.create_batches_to_scan()
 
+            if total_files_to_scan == 0:
+                Log.info('no files to scan', 'BlobScanner') 
+                return
+
             init_message = f'total {total_files_to_scan} files to scan divided into {len(batches)} batches, ignoring blob_tier=Cool and scan_status=No_Virus'
             Log.info(init_message, 'BlobScanner')
             self.update_scan_report('summary', '', init_message)
@@ -68,11 +72,12 @@ class BlobScanner:
                 Log.info(f'starting batch {batch.id} with {len(batch.files_to_scan)} files', 'BlobScanner')
 
                 # create a new process for each batch
-                p = Process(target=self._scan_batch, args=(batch,))
+                t = threading.Thread(target=self._scan_batch, args=(batch,))
+                threads.append(t)
 
-                threads.append(p)
-                p.start()
 
+            for t in threads:
+                t.start()
 
             for t in threads:
                 t.join()
@@ -111,26 +116,28 @@ class BlobScanner:
                 scanresult = clamav.scan_file(clamav_full_mount_path)
 
                 if scanresult.status == ScanStatus.FOUND:
-                    Log.info(f'Virus found in {file_path} in batch {batch_id} by scanner {host}:{batch.clamav.port}, moving file to quarentine container', 'BlobScanner')
-                    self.update_scan_report(container, file_path, f'batch: {batch_id}, status: {BlobScanStatus.VIRUS_FOUND}, scan by clamav: {host}:{port}')                          
+                    msg = f'batch: {batch_id}, status: {BlobScanStatus.VIRUS_FOUND}, scan by clamav: {host}:{port}'
+                    Log.info(f'Virus found in {file_path}, {msg}, moving file to quarentine container', 'BlobScanner')
+                    self.update_scan_report(container, file_path, BlobScanStatus.VIRUS_FOUND, msg)                          
                     self.quarantine_blob(container, file_path)
 
                 elif scanresult.status == ScanStatus.OK:
                     #self._set_file_scan_status(status=BlobScanStatus.NO_VIRUS, file_path=file_path)
                     self.azstorage.set_blob_tier_to_cool(container, file_path)
-                    self.update_scan_report(container, file_path, f'batch: {batch_id}, status: {BlobScanStatus.NO_VIRUS}, scan by clamav: {host}:{port}')
-                    Log.info(f"No virus found for {Util.full_blob_name(container, file_path)}", 'BlobScanner')
+                    msg = f'batch: {batch_id}, status: {BlobScanStatus.NO_VIRUS}, scan by clamav: {host}:{port}'
+                    self.update_scan_report(container, file_path, BlobScanStatus.NO_VIRUS, msg)
+                    Log.info(f"No virus found for {Util.full_blob_name(container, file_path)}, {msg}", 'BlobScanner')
 
                 elif scanresult.status == ScanStatus.ERROR:
-                    #self._set_file_scan_status(status=BlobScanStatus.ERROR, file_path=file_path)
-                    self.update_scan_report(container, file_path, f'batch: {batch_id}, status: {BlobScanStatus.ERROR}, scan by clamav: {host}:{port}, error: {scanresult.message}')
-                    Log.error(f"Scan - error scanning file {Util.full_blob_name(container, file_path)}. {scanresult.message}", 'BlobScanner')
+                    msg = f'batch: {batch_id}, status: {BlobScanStatus.ERROR}, scan by clamav: {host}:{port}, error: {scanresult.message}'
+                    self.update_scan_report(container, file_path, BlobScanStatus.ERROR, msg)
+                    Log.error(f"Scan - error scanning file {Util.full_blob_name(container, file_path)}, {msg}", 'BlobScanner')
 
 
             except Exception as e:
-                #self._set_file_scan_status(status=BlobScanStatus.ERROR, file_path=file_path)
-                self.update_scan_report(container, file_path, f'batch: {batch_id}, status: {BlobScanStatus.ERROR}, scan by clamav: {host}:{port}, error: {str(e)}')
-                Log.error(f"Error scanning blob {Util.full_blob_name(container, file_path)}: {str(e)}", 'BlobScanner')
+                msg = f'batch: {batch_id}, status: {BlobScanStatus.ERROR}, scan by clamav: {host}:{port}, error: {str(e)}'
+                self.update_scan_report(container, file_path, BlobScanStatus.ERROR, msg)
+                Log.error(f"Error scanning blob {Util.full_blob_name(container, file_path)}, {msg}", 'BlobScanner')
 
 
     def create_batches_to_scan(self) -> list[list[BatchToScan], int]:
@@ -141,6 +148,9 @@ class BlobScanner:
 
         # get all file paths in all containers to scan
         files_to_scan = self.get_all_files_to_scan()
+
+        if len(files_to_scan) == 0:
+            return [], 0
 
         file_batches = [files_to_scan[i::no_of_batches] for i in range(no_of_batches)]
 
