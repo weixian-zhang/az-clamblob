@@ -4,6 +4,11 @@ import os
 
 load_dotenv()
 
+class ClamAvHost:
+    def __init__(self, host: str, port: int):
+        self.host = host
+        self.port = port
+
 class Config:
     _instance = None
 
@@ -29,8 +34,8 @@ class Config:
 
     def load(self):
         self.mount_path = os.getenv('MOUNT_PATH')
-        self.clamav_host = os.getenv('CLAMAV_HOST') if os.getenv('CLAMAV_HOST') else 'localhost'
-        self.clamav_port = int(os.getenv('CLAMAV_PORT')) if os.getenv('CLAMAV_PORT') else 3310
+        self.clamav_host =  self.get_clamav_hosts()
+        #self.clamav_port = int(os.getenv('CLAMAV_PORT')) if os.getenv('CLAMAV_PORT') else 3310
         self.appinsights_conn_str = os.getenv('APP_INSIGHTS_INSTRUMENTATION_CONN_STRING') if os.getenv('APP_INSIGHTS_INSTRUMENTATION_CONN_STRING') else ''
         self.quarantine_container_name = os.getenv('QUARANTINE_CONTAINER_NAME') if os.getenv('QUARANTINE_CONTAINER_NAME') else 'quarantine'
         self.azure_storage_name = os.getenv('AZURE_STORAGE_NAME') if os.getenv('AZURE_STORAGE_NAME') else ''
@@ -45,3 +50,17 @@ class Config:
             raise ValueError("AZURE_STORAGE_NAME is not set in the environment variables.")
         # if self.azure_file_share_conn_string == '':
         #     raise ValueError("AZURE_FILE_SHARE_CONN_STRING is not set in the environment variables.")
+
+
+    def get_clamav_hosts(self) -> list[ClamAvHost]:
+        clamav_host = os.getenv('CLAMAV_HOST') if os.getenv('CLAMAV_HOST') else 'localhost'
+
+        hosts = []
+        for host in clamav_host.split(','):
+            host = host.strip()
+            if ':' in host:
+                h, p = host.split(':')
+                hosts.append(ClamAvHost(h, int(p)))
+            else:
+                hosts.append(ClamAvHost(host, 3310))
+        return hosts

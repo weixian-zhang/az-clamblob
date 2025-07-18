@@ -45,7 +45,14 @@ class BlobScanner:
                 return
             
             #  clean up file share in case previous scan was previously interrupted
-            self.azstorage.delete_all_in_file_share()
+            # self.azstorage.delete_all_in_file_share()
+
+
+            # get all file paths in all containers to scan
+
+            # batchify the files by number of scanners
+
+            # create a new thread per batch
 
             for container in self.config.containers_to_scan:
 
