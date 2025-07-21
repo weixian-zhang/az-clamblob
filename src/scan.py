@@ -55,9 +55,11 @@ class BlobScanner:
             ok = self.load_scan_report()
             if not ok:
                 return
-            
-            Log.info('batchifying files to get ready for scan', 'BlobScanner')
+
+            clamav_str = ', '.join([f'{c.host}:{c.port}' for c in self.config.clamav_hosts])
+            Log.info(f'batchifying files, detected {len(self.config.clamav_hosts)} clamav host: {clamav_str}', 'BlobScanner')
             batches, total_files_to_scan = self.create_batches_to_scan()
+            Log.info(f'batching files completed', 'BlobScanner')
 
             if total_files_to_scan == 0:
                 Log.info('no files to scan', 'BlobScanner') 
