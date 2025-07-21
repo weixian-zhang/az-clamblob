@@ -17,15 +17,15 @@ spec:
       serviceAccountName: sc-account-fa9a83f1-1f23-4258-9a14-2f24c283f000
       containers:
         - name: scanner-3
-          image: wxzd/clamblob:v0.5.0
+          image: wxzd/clamblob:v0.6.0
           imagePullPolicy: Always
           resources:
             requests:
               memory: "4Gi" #"256Mi"
               cpu: "2" # "250m"
             limits:
-              memory: "4Gi" #"512Mi"
-              cpu: "2" #"500m"
+              memory: "6Gi" #"512Mi"
+              cpu: "4" #"500m"
 
           env:
           - name: MOUNT_PATH
@@ -36,9 +36,7 @@ spec:
                 name: azure-secrets
                 key: APP_INSIGHTS_INSTRUMENTATION_CONN_STRING
           - name: CLAMAV_HOST
-            value: "service-clamav-3" # service name of clamav
-          - name: CLAMAV_PORT
-            value: "3310"
+            value: "service-clamav-5:3310,service-clamav-6:3310"
           - name: QUARANTINE_CONTAINER_NAME
             value: "quarantine"
           - name: AZURE_STORAGE_NAME

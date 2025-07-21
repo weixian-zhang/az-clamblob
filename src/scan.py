@@ -56,7 +56,7 @@ class BlobScanner:
             if not ok:
                 return
             
-
+            Log.info('batchifying files to get ready for scan', 'BlobScanner')
             batches, total_files_to_scan = self.create_batches_to_scan()
 
             if total_files_to_scan == 0:

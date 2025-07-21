@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clamav-4
+  namespace: clamblob
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clamav-4
+  template:
+    metadata:
+      labels:
+        app: clamav-4
+    spec:
+      containers:
+        - name: clamav-4
+          image: clamav/clamav
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3310
+          resources:
+           requests:
+              memory: "4Gi" #"256Mi"
+              cpu: "2" # "250m"
+           limits:
+              memory: "4Gi" #"512Mi"
+              cpu: "2" #"500m"
+          volumeMounts:
+            - name: container-2
+              mountPath: "/azfile" # named azfile to prevent code change
+              readOnly: false
+
+          env:
+          - name: MAX_FILE_SIZE
+            value: "40000M"
+          - name: MAX_SCAN_SIZE
+            value: "40000M"
+          - name: MAX_FILES
+            value: "50000"
+
+      volumes:
+      - name: container-2
+        persistentVolumeClaim:
+          claimName: pvc-container-2
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-clamav-4
+  namespace: clamblob
+spec:
+  selector:
+    app: clamav-4
+  ports:
+    - protocol: TCP
+      port: 3310
+      targetPort: 3310
+  type: ClusterIP  # Change to NodePort or LoadBalancer if external access is needed

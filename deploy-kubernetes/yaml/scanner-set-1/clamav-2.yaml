@@ -20,14 +20,14 @@ spec:
           ports:
             - containerPort: 3310
           resources:
-           requests:
+            requests:
               memory: "4Gi" #"256Mi"
               cpu: "2" # "250m"
-           limits:
+            limits:
               memory: "4Gi" #"512Mi"
               cpu: "2" #"500m"
           volumeMounts:
-            - name: container-2
+            - name: container-1
               mountPath: "/azfile" # named azfile to prevent code change
               readOnly: false
 
@@ -40,9 +40,9 @@ spec:
             value: "50000"
 
       volumes:
-      - name: container-2
+      - name: container-1
         persistentVolumeClaim:
-          claimName: pvc-container-2
+          claimName: pvc-container-1
 
 ---
 
