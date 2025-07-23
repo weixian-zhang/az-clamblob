@@ -295,26 +295,30 @@ class AzStorage:
             if blob_tier == StandardBlobTier.COOL:
                 return True
 
+            # ** is NO_VIRUS metadata detected, if yes, set blob tier to Cool
             file = self.current_dlfs_client.get_file_client(blob_name)
             props = file.get_file_properties() # self.blob_service_client.get_blob_client(container=container_name, blob=blob_name).get_blob_properties().metadata
             val = props.metadata.get("clamav_blob_scan", None)
             
-            # * set tier to Cool if not already is
             if val is not None and val == BlobScanStatus.NO_VIRUS:
                 self.set_blob_tier_to_cool(container_name, blob_name)
                 Log.info(f"Blob {Util.full_blob_name(container_name, blob_name)} has been scanned and found to be clean. Setting tier to Cool.", 'AzStorage')
                 return True
 
+
+            # use to handle scenario where blob is being copied to file share and takes more than 120 minutes to complete.
             # if blob is in progress, check if last modified is >= 120 minutes and rescan blob if it is.
             if val is not None and val == BlobScanStatus.IN_PROGRESS:
-                now = datetime.now(pytz.utc)
-                fmt = '%Y-%m-%d %H:%M:%S'
-                last_modified = datetime.strptime(f'{props.last_modified.year}-{props.last_modified.month}-{props.last_modified.day} {props.last_modified.hour}:{props.last_modified.minute}:{props.last_modified.second}', fmt)
-                now = datetime.strptime(f'{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}', fmt)
-                minuteDiff = (now-last_modified).total_seconds() / 60
-                if minuteDiff >= 120:
-                    Log.info(f'{Util.full_blob_name(container_name, blob_name)} in_progress status over 120 mins, rescanning file', 'AzStorage')
-                    return False
+                file.set_metadata({})
+                return False
+                # now = datetime.now(pytz.utc)
+                # fmt = '%Y-%m-%d %H:%M:%S'
+                # last_modified = datetime.strptime(f'{props.last_modified.year}-{props.last_modified.month}-{props.last_modified.day} {props.last_modified.hour}:{props.last_modified.minute}:{props.last_modified.second}', fmt)
+                # now = datetime.strptime(f'{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}', fmt)
+                # minuteDiff = (now-last_modified).total_seconds() / 60
+                # if minuteDiff >= 120:
+                #     Log.info(f'{Util.full_blob_name(container_name, blob_name)} in_progress status over 120 mins, rescanning file', 'AzStorage')
+                #     return False
             
             return False
         

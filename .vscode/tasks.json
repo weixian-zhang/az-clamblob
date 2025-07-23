@@ -10,7 +10,7 @@
         {
             "label": "docker build scanner",
             "type": "shell",
-            "command": "docker build -t docker.io/wxzd/clamblob:v0.6.0 .",
+            "command": "docker build -t docker.io/wxzd/clamblob:v0.6.1 .",
             "options": {
                 "cwd": "${workspaceFolder}/src"
             },
@@ -29,7 +29,7 @@
         {
             "label": "docker push scanner",
             "type": "shell",
-            "command": "docker push docker.io/wxzd/clamblob:v0.6.0",
+            "command": "docker push docker.io/wxzd/clamblob:v0.6.1",
             "options": {
                 "cwd": "${workspaceFolder}/src"
             },
