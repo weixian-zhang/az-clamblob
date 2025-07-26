@@ -16,6 +16,9 @@ spec:
     - -o allow_other
     - --file-cache-timeout-in-seconds=120
     - --use-adls=true
+    - --use-attr-cache=false
+    - --file-cache-timeout-in-seconds=0
+    - --cache-size-mb=0
   csi:
     driver: blob.csi.azure.com
     # volumeid has to be unique for every identical storage blob container in the cluster

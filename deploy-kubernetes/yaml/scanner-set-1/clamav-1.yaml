@@ -17,6 +17,8 @@ spec:
         - name: clamav-1
           image: clamav/clamav
           imagePullPolicy: Always
+          # command: ["clamdscan"]
+          # args: ["/scandir"]
           ports:
             - containerPort: 3310
           resources:
