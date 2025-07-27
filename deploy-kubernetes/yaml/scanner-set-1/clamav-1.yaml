@@ -45,7 +45,9 @@ spec:
           - name: CLAMD_CONF_LogClean
             value: "yes"
           - name: CLAMD_CONF_LogFile
-            value: "/azfile/clamav/clamav.log"
+            value: "/azfile/clamav/clamd.log"
+          - name: CLAMD_CONF_LogFileUnlock
+            value: "yes"
 
       volumes:
       - name: container-1
