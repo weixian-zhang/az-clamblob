@@ -14,7 +14,6 @@ spec:
   storageClassName: azureblob-fuse-premium
   mountOptions:
     - -o allow_other
-    - --file-cache-timeout-in-seconds=120
     - --use-adls=true
     - --use-attr-cache=false
     - --file-cache-timeout-in-seconds=0
