@@ -48,11 +48,7 @@ spec:
             value: "/azfile/clamav/clamd.log"
           - name: CLAMD_CONF_LogFileUnlock
             value: "yes"
-          - name: CLAMD_CONF_ExtendedDetectionInfo
-            value: "yes"
           - name: CLAMD_CONF_LogRotate
-            value: "yes"
-          - name: CLAMD_CONF_LogVerbose
             value: "yes"
 
       volumes:
