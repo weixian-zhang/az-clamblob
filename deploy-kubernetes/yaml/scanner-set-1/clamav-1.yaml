@@ -40,6 +40,12 @@ spec:
             value: "40000M"
           - name: MAX_FILES
             value: "50000"
+          - name: CLAMD_CONF_LogTime
+            value: "yes"
+          - name: CLAMD_CONF_LogClean
+            value: "yes"
+          - name: CLAMD_CONF_LogFile
+            value: "/azfile/clamav/clamav.log"
 
       volumes:
       - name: container-1
