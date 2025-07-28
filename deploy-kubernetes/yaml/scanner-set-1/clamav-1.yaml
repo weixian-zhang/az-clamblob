@@ -50,6 +50,8 @@ spec:
             value: "yes"
           - name: CLAMD_CONF_LogRotate
             value: "yes"
+          - name: CLAMD_CONF_OnAccessExcludePath
+            value: "/azfile"
 
       volumes:
       - name: container-1
